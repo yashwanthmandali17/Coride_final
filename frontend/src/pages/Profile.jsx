@@ -3,6 +3,7 @@ import authAPI from '../services/authAPI';
 import rideAPI from '../services/rideAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import ConfirmModal from '../components/ConfirmModal';
 import { User, Award, ShieldCheck, Star, Plus, Trash2, ShieldAlert, CheckCircle, Car, Bike, PlusCircle, CreditCard } from 'lucide-react';
 
 const Profile = () => {
@@ -26,6 +27,7 @@ const Profile = () => {
   const [vehicleSuccess, setVehicleSuccess] = useState('');
   const [vehicleError, setVehicleError] = useState('');
   const [vehicleLoading, setVehicleLoading] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState(null);
 
   const loadVehicles = async () => {
     try {
@@ -91,14 +93,20 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteVehicle = async (vehicleId) => {
-    if (!window.confirm("Are you sure you want to delete this vehicle? Any active rides using this vehicle will not be deleteable unless cancelled.")) return;
+  const handleDeleteVehicle = (vehicleId) => {
+    setVehicleToDelete(vehicleId);
+  };
+
+  const confirmDeleteVehicle = async () => {
+    if (!vehicleToDelete) return;
     try {
-      await rideAPI.deleteVehicle(vehicleId);
+      await rideAPI.deleteVehicle(vehicleToDelete);
       addToast('Success', 'Vehicle deleted successfully.', 'success');
       loadVehicles();
     } catch (err) {
       addToast('Error', 'Failed to delete vehicle. It may be linked to active published rides.', 'error');
+    } finally {
+      setVehicleToDelete(null);
     }
   };
 
@@ -111,6 +119,16 @@ const Profile = () => {
 
   return (
     <div style={styles.container} className="animate-fade">
+      <ConfirmModal
+        isOpen={!!vehicleToDelete}
+        title="Delete Vehicle"
+        message="Are you sure you want to delete this vehicle? Any active rides using this vehicle will not be deleteable unless cancelled."
+        confirmText="Delete Vehicle"
+        type="danger"
+        onConfirm={confirmDeleteVehicle}
+        onCancel={() => setVehicleToDelete(null)}
+      />
+
       <div style={styles.heroSection}>
         <h2 style={styles.heroTitle}>Profile Management</h2>
         <p style={styles.heroSubtitle}>

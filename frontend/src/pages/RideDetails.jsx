@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import rideAPI from '../services/rideAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import RouteMap from '../components/RouteMap';
 import LoadingFacts from '../components/LoadingFacts';
+import ConfirmModal from '../components/ConfirmModal';
 import { MapPin, Calendar, Users, IndianRupee, MessageSquare, ShieldCheck, CheckCircle2, Star, Award, ChevronRight, Check } from 'lucide-react';
 
 const RideDetails = () => {
   const { rideId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = location.state?.searchParams;
   const { addToast } = useNotifications();
 
   const [ride, setRide] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [myRequest, setMyRequest] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [history, setHistory] = useState([]);
   
   const [loading, setLoading] = useState(true);
@@ -70,7 +74,12 @@ const RideDetails = () => {
   const handleRequestJoin = async () => {
     try {
       setLoading(true);
-      await rideAPI.requestRide(rideId);
+      const payload = {};
+      if (searchParams) {
+        payload.pickup_location = searchParams.pickup;
+        payload.dropoff_location = searchParams.dropoff;
+      }
+      await rideAPI.requestRide(rideId, payload);
       addToast('Request Sent', 'Your request to join this ride has been submitted.', 'success');
       await loadRideDetails();
     } catch (err) {
@@ -104,8 +113,12 @@ const RideDetails = () => {
     }
   };
 
-  const handleCancelRide = async () => {
-    if (!window.confirm("Are you sure you want to cancel this ride? If passengers are already booked, this will lower your Reliability Score.")) return;
+  const handleCancelRide = () => {
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelRide = async () => {
+    setShowCancelModal(false);
     try {
       setLoading(true);
       await rideAPI.updateRideStatus(rideId, 'cancelled');
@@ -180,6 +193,16 @@ const RideDetails = () => {
   return (
     <div style={styles.container} className="animate-fade">
       
+      <ConfirmModal
+        isOpen={showCancelModal}
+        title="Cancel Ride"
+        message="Are you sure you want to cancel this ride? If passengers are already booked, this will lower your Reliability Score."
+        confirmText="Yes, Cancel Ride"
+        type="danger"
+        onConfirm={confirmCancelRide}
+        onCancel={() => setShowCancelModal(false)}
+      />
+
       {/* Header details */}
       <div style={styles.header}>
         <div>
@@ -314,14 +337,31 @@ const RideDetails = () => {
                 <div style={styles.actionRow}>
                   {/* Case 1: No request yet */}
                   {!myRequest && ride.status === 'published' && (
-                    <button
-                      onClick={handleRequestJoin}
-                      className="btn btn-primary"
-                      style={{ width: '100%' }}
-                      disabled={new Date(ride.departure_time) <= new Date()}
-                    >
-                      {new Date(ride.departure_time) <= new Date() ? 'Ride Departed / Completed' : 'Request to Join Ride'}
-                    </button>
+                    <div style={{ width: '100%' }}>
+                      {searchParams && (
+                        <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: 'rgba(124, 77, 255, 0.05)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(124, 77, 255, 0.2)' }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem', display: 'block' }}>Your Route</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.85rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--success)', flexShrink: 0 }}></div>
+                              <strong>{searchParams.pickup.split(',').slice(0, 2).join(',')}</strong>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--danger)', flexShrink: 0 }}></div>
+                              <strong>{searchParams.dropoff.split(',').slice(0, 2).join(',')}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        onClick={handleRequestJoin}
+                        className="btn btn-primary"
+                        style={{ width: '100%' }}
+                        disabled={new Date(ride.departure_time) <= new Date()}
+                      >
+                        {new Date(ride.departure_time) <= new Date() ? 'Ride Departed / Completed' : 'Request to Join Ride'}
+                      </button>
+                    </div>
                   )}
                   
                   {/* Case 2: Request pending */}
@@ -452,6 +492,11 @@ const RideDetails = () => {
                       )}
                       <div style={{ flex: 1 }}>
                         <strong style={styles.partName}>{p.user.name}</strong>
+                        {p.pickup_location && p.dropoff_location && (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.2rem', marginBottom: '0.2rem' }}>
+                            <span style={{ color: 'var(--success)' }}>{p.pickup_location.split(',')[0]}</span> → <span style={{ color: 'var(--danger)' }}>{p.dropoff_location.split(',')[0]}</span>
+                          </div>
+                        )}
                         <div style={styles.partMeta}>
                           <Star size={11} fill="var(--warning)" color="var(--warning)" />
                           <span>{p.user.average_rating > 0 ? p.user.average_rating.toFixed(1) : "N/A"}</span>

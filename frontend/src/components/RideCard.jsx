@@ -2,8 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Calendar, Users, IndianRupee, Star, Award, ShieldCheck } from 'lucide-react';
 
-const RideCard = ({ ride, showDetailsBtn = true }) => {
+const RideCard = ({ ride, showDetailsBtn = true, searchParams = null }) => {
   // Format departure date
+
   const departureDate = new Date(ride.departure_time);
   const formattedDate = departureDate.toLocaleDateString([], {
     weekday: 'short',
@@ -89,7 +90,12 @@ const RideCard = ({ ride, showDetailsBtn = true }) => {
 
       {/* View details CTA */}
       {showDetailsBtn && (
-        <Link to={`/rides/${ride.id}`} className="btn btn-primary" style={styles.cta}>
+        <Link 
+          to={`/rides/${ride.id}`} 
+          state={searchParams ? { searchParams } : null}
+          className="btn btn-primary" 
+          style={styles.cta}
+        >
           View Details & Join
         </Link>
       )}

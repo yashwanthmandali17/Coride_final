@@ -6,6 +6,8 @@ from app.rides.schemas import RideResponse, RideDetailedResponse
 
 class RideRequestCreate(BaseModel):
     ride_id: str
+    pickup_location: Optional[str] = None
+    dropoff_location: Optional[str] = None
 
 class RideRequestUpdate(BaseModel):
     status: str # "accepted", "rejected", "cancelled"
@@ -15,6 +17,8 @@ class RideRequestResponse(BaseModel):
     ride_id: str
     passenger_id: str
     status: str
+    pickup_location: Optional[str] = None
+    dropoff_location: Optional[str] = None
     requested_at: datetime
     passenger: UserResponse
     ride: RideDetailedResponse
@@ -34,6 +38,8 @@ class RideParticipantResponse(BaseModel):
     ride_id: str
     user_id: str
     role: str
+    pickup_location: Optional[str] = None
+    dropoff_location: Optional[str] = None
     joined_at: datetime
     user: UserResponse
 

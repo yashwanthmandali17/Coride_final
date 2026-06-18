@@ -11,6 +11,8 @@ class RideRequest(Base):
     ride_id = Column(String(36), ForeignKey("rides.id", ondelete="CASCADE"), nullable=False, index=True)
     passenger_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     status = Column(String(20), default="pending") # "pending", "accepted", "rejected", "cancelled"
+    pickup_location = Column(String(255), nullable=True)
+    dropoff_location = Column(String(255), nullable=True)
     requested_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -25,6 +27,8 @@ class RideParticipant(Base):
     ride_id = Column(String(36), ForeignKey("rides.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     role = Column(String(20), nullable=False) # "driver" or "passenger"
+    pickup_location = Column(String(255), nullable=True)
+    dropoff_location = Column(String(255), nullable=True)
     confirmed_completion = Column(Boolean, default=False)
     joined_at = Column(DateTime(timezone=True), server_default=func.now())
 

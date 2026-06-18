@@ -45,8 +45,8 @@ const rideAPI = {
   },
 
   // Requests Flow
-  requestRide: async (rideId) => {
-    const response = await api.post('/requests', { ride_id: rideId });
+  requestRide: async (rideId, payload = {}) => {
+    const response = await api.post('/requests', { ride_id: rideId, ...payload });
     return response.data;
   },
 

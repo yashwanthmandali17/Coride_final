@@ -157,7 +157,15 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div style={styles.reqRoute}>
-                      <div style={styles.routeLabel}>Ride to: <strong>{req.ride.destination}</strong></div>
+                      {req.pickup_location && req.dropoff_location ? (
+                        <div style={styles.routeLabel}>
+                          Passenger Route: <strong style={{ color: 'var(--accent-primary)' }}>{req.pickup_location} → {req.dropoff_location}</strong>
+                        </div>
+                      ) : (
+                        <div style={styles.routeLabel}>
+                          Ride to: <strong>{req.ride.destination}</strong>
+                        </div>
+                      )}
                       <div style={styles.routeTime}>
                         Scheduled: {new Date(req.ride.departure_time).toLocaleDateString()} at{' '}
                         {new Date(req.ride.departure_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

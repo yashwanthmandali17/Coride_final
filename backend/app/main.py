@@ -25,6 +25,27 @@ try:
         if "ride_id" not in columns:
             with engine.begin() as conn:
                 conn.execute(text("ALTER TABLE notifications ADD COLUMN ride_id VARCHAR(36);"))
+    
+    if "rides" in inspector.get_table_names():
+        columns = [col["name"] for col in inspector.get_columns("rides")]
+        if "route_h3_indexes" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE rides ADD COLUMN route_h3_indexes JSON;"))
+
+    if "ride_requests" in inspector.get_table_names():
+        columns = [col["name"] for col in inspector.get_columns("ride_requests")]
+        if "pickup_location" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE ride_requests ADD COLUMN pickup_location VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE ride_requests ADD COLUMN dropoff_location VARCHAR(255);"))
+
+    if "ride_participants" in inspector.get_table_names():
+        columns = [col["name"] for col in inspector.get_columns("ride_participants")]
+        if "pickup_location" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE ride_participants ADD COLUMN pickup_location VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE ride_participants ADD COLUMN dropoff_location VARCHAR(255);"))
+
 except Exception as e:
     print(f"Database schema migration warning: {e}")
 

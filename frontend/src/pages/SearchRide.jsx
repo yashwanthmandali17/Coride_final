@@ -397,7 +397,11 @@ const SearchRide = () => {
           ) : (
             <div style={styles.resultsList}>
               {rides.map((ride) => (
-                <RideCard key={ride.id} ride={ride} />
+                <RideCard 
+                  key={ride.id} 
+                  ride={ride} 
+                  searchParams={{ pickup: sourceInput, dropoff: destInput }}
+                />
               ))}
             </div>
           )}

@@ -49,7 +49,9 @@ def request_ride(
     db_request = RideRequest(
         ride_id=ride.id,
         passenger_id=current_user.id,
-        status="pending"
+        status="pending",
+        pickup_location=payload.pickup_location,
+        dropoff_location=payload.dropoff_location
     )
     db.add(db_request)
     
@@ -63,11 +65,16 @@ def request_ride(
     db.commit()
     
     # Notify Driver
+    if payload.pickup_location and payload.dropoff_location:
+        notif_msg = f"{current_user.name} has requested to join your ride from {payload.pickup_location} to {payload.dropoff_location}."
+    else:
+        notif_msg = f"{current_user.name} has requested to join your ride from {ride.source} to {ride.destination}."
+
     create_notification(
         db=db,
         user_id=ride.owner_id,
         title="New Ride Request",
-        message=f"{current_user.name} has requested to join your ride from {ride.source} to {ride.destination}.",
+        message=notif_msg,
         ride_id=ride.id
     )
     
@@ -110,7 +117,9 @@ def update_request_status(
             participant = RideParticipant(
                 ride_id=ride.id,
                 user_id=passenger.id,
-                role="passenger"
+                role="passenger",
+                pickup_location=request_obj.pickup_location,
+                dropoff_location=request_obj.dropoff_location
             )
             db.add(participant)
             

@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, JSON
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -21,8 +21,10 @@ class Ride(Base):
     auto_cost = Column(Float, nullable=False)
     final_cost = Column(Float, nullable=False)
     status = Column(String(20), default="published", index=True) # "published", "started", "completed", "cancelled"
+    route_h3_indexes = Column(JSON, default=list) # Stores the H3 grid array for waypoint matching
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
 
     # Relationships
     owner = relationship("User", back_populates="published_rides")

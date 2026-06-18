@@ -1,4 +1,5 @@
 import math
+import h3
 from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
 from sqlalchemy.orm import Session
@@ -6,18 +7,14 @@ from app.rides.models import Ride
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Calculate the great-circle distance between two points on the Earth's surface in kilometers."""
-    # Earth radius in kilometers
     R = 6371.0
-    
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
     delta_phi = math.radians(lat2 - lat1)
     delta_lambda = math.radians(lon2 - lon1)
-    
     a = (math.sin(delta_phi / 2.0) ** 2 +
          math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0) ** 2)
     c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
-    
     return R * c
 
 def ensure_utc(dt: datetime) -> datetime:
@@ -39,7 +36,7 @@ def match_rides(
     time_window_hours: float = 24.0
 ) -> List[Tuple[Ride, float, float]]:
     """
-    Find rides matching source and destination within search radius.
+    Find rides matching source and destination within search radius or along the route.
     Returns list of tuples: (Ride, source_distance, destination_distance).
     Sorted by total distance offset and time proximity.
     """
@@ -57,20 +54,52 @@ def match_rides(
         preferred_time = ensure_utc(preferred_time)
         start_window = preferred_time - timedelta(hours=time_window_hours)
         end_window = preferred_time + timedelta(hours=time_window_hours)
-        # Ensure we don't look in the past relative to right now
         start_window = max(start_window, now)
         query = query.filter(Ride.departure_time.between(start_window, end_window))
         
     all_rides = query.all()
     matched = []
     
+    # Prepare passenger H3 grid buffers (Resolution 8 is ~460m. k=6 gives roughly 4.5km radius)
+    try:
+        p_s_cell = h3.latlng_to_cell(s_lat, s_lng, 8)
+        p_d_cell = h3.latlng_to_cell(d_lat, d_lng, 8)
+        p_s_buffer = h3.grid_disk(p_s_cell, 6)
+        p_d_buffer = h3.grid_disk(p_d_cell, 6)
+    except Exception:
+        p_s_buffer, p_d_buffer = set(), set()
+    
     for ride in all_rides:
         dist_s = haversine_distance(ride.source_lat, ride.source_lng, s_lat, s_lng)
         dist_d = haversine_distance(ride.destination_lat, ride.destination_lng, d_lat, d_lng)
         
-        # Check if both source and destination are within the search radius
+        # 1. Direct Endpoint Match
         if dist_s <= radius_km and dist_d <= radius_km:
             matched.append((ride, dist_s, dist_d))
+            continue
+            
+        # 2. Waypoint Match (Partial Trip) via H3 Indexes
+        route_hexes = ride.route_h3_indexes or []
+        if route_hexes:
+            s_match_idx = -1
+            d_match_idx = -1
+            
+            # Find earliest intersection for source
+            for i, hex_id in enumerate(route_hexes):
+                if hex_id in p_s_buffer:
+                    s_match_idx = i
+                    break
+                    
+            # Find latest intersection for destination AFTER source
+            if s_match_idx != -1:
+                for i in range(len(route_hexes) - 1, s_match_idx, -1):
+                    if route_hexes[i] in p_d_buffer:
+                        d_match_idx = i
+                        break
+                        
+            # If both matched in the correct sequential order
+            if s_match_idx != -1 and d_match_idx != -1 and s_match_idx <= d_match_idx:
+                matched.append((ride, dist_s, dist_d))
             
     # Sorting function:
     # 1. Total distance offset (closer is better)

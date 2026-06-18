@@ -11,6 +11,31 @@ from app.rides.schemas import RideCreate, RideUpdate, RideDetailedResponse
 from app.auth.dependencies import get_current_user
 from app.users.models import User
 from app.rides.matching import haversine_distance, match_rides
+import requests
+import h3
+
+def get_route_h3_indexes(s_lat: float, s_lng: float, d_lat: float, d_lng: float, resolution: int = 8) -> list:
+    """Fetch polyline from OSRM and convert to an ordered list of unique H3 hexes."""
+    url = f"http://router.project-osrm.org/route/v1/driving/{s_lng},{s_lat};{d_lng},{d_lat}?overview=full&geometries=geojson"
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("routes"):
+                coords = data["routes"][0]["geometry"]["coordinates"]
+                indexes = []
+                for lon, lat in coords:
+                    cell = h3.latlng_to_cell(lat, lon, resolution)
+                    if not indexes or indexes[-1] != cell:
+                        indexes.append(cell)
+                return indexes
+    except Exception as e:
+        print(f"OSRM Error: {e}")
+    # Fallback if OSRM fails
+    return [
+        h3.latlng_to_cell(s_lat, s_lng, resolution),
+        h3.latlng_to_cell(d_lat, d_lng, resolution)
+    ]
 
 router = APIRouter(prefix="/rides", tags=["rides"])
 
@@ -86,7 +111,11 @@ def publish_ride(
         seats_available=payload.seats_available,
         auto_cost=auto_cost,
         final_cost=payload.final_cost if payload.final_cost is not None else auto_cost,
-        status="published"
+        status="published",
+        route_h3_indexes=get_route_h3_indexes(
+            payload.source_lat, payload.source_lng,
+            payload.destination_lat, payload.destination_lng
+        )
     )
     
     db.add(db_ride)
