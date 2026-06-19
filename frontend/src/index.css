@@ -9,21 +9,22 @@
   --bg-secondary: #12131a;
   --bg-tertiary: #1a1c26;
   
-  --accent-primary: #7c4dff;
-  --accent-primary-hover: #651fff;
-  --accent-secondary: #00e5ff;
-  --accent-gradient: linear-gradient(135deg, #7c4dff 0%, #00e5ff 100%);
-  --accent-gradient-hover: linear-gradient(135deg, #651fff 0%, #00b0ff 100%);
+  --accent-primary: #FF007F;
+  --accent-primary-hover: #D8006B;
+  --accent-secondary: #FF8C00;
+  --accent-gradient: linear-gradient(135deg, #FF007F 0%, #FF8C00 100%);
+  --accent-gradient-hover: linear-gradient(135deg, #D8006B 0%, #E67E22 100%);
   
   --text-primary: #f5f6fa;
   --text-secondary: #8f92a1;
   --text-muted: #565867;
   
   --border-color: rgba(255, 255, 255, 0.08);
-  --border-focus: rgba(124, 77, 255, 0.5);
+  --border-focus: rgba(255, 0, 127, 0.5);
   
   --success: #00e676;
   --warning: #ffea00;
+  --warning-text: #0a0b10;
   --danger: #ff1744;
   --info: #2979ff;
   
@@ -58,22 +59,24 @@ body.light-theme {
   --text-secondary: #565867;
   --text-muted: #8f92a1;
   
-  --border-color: rgba(124, 77, 255, 0.15);
-  --border-focus: rgba(124, 77, 255, 0.5);
+  --border-color: rgba(255, 0, 127, 0.15);
+  --border-focus: rgba(255, 0, 127, 0.5);
   
   /* Added a subtle colorful gradient to main panels in light mode */
-  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(244, 248, 255, 0.85) 50%, rgba(246, 240, 255, 0.85) 100%);
-  --glass-border: rgba(124, 77, 255, 0.15);
-  --glass-shadow: 0 8px 32px 0 rgba(124, 77, 255, 0.12);
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 245, 248, 0.85) 50%, rgba(255, 248, 238, 0.85) 100%);
+  --glass-border: rgba(255, 0, 127, 0.15);
+  --glass-shadow: 0 8px 32px 0 rgba(255, 0, 127, 0.12);
   --glass-blur: blur(12px);
 
-  --input-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 245, 255, 0.9) 100%);
+  --input-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 248, 250, 0.9) 100%);
   --input-bg-focus: #ffffff;
-  --input-border: rgba(124, 77, 255, 0.25);
+  --input-border: rgba(255, 0, 127, 0.25);
   
   /* Added colorful gradient to inner blocks/cards for attraction */
-  --card-inner-bg: linear-gradient(135deg, rgba(238, 242, 255, 0.8) 0%, rgba(245, 238, 255, 0.8) 100%);
-  --card-inner-border: rgba(124, 77, 255, 0.12);
+  --card-inner-bg: linear-gradient(135deg, rgba(255, 240, 245, 0.8) 0%, rgba(255, 245, 238, 0.8) 100%);
+  --card-inner-border: rgba(255, 0, 127, 0.12);
+  --warning: #d97706;
+  --warning-text: #ffffff;
 }
 
 * {
@@ -85,9 +88,9 @@ body.light-theme {
 body {
   background-color: var(--bg-primary);
   background-image: 
-    radial-gradient(circle at 0% 0%, rgba(124, 77, 255, 0.05) 0%, transparent 35%),
-    radial-gradient(circle at 100% 0%, rgba(0, 229, 255, 0.05) 0%, transparent 35%),
-    radial-gradient(circle at 50% 100%, rgba(124, 77, 255, 0.03) 0%, transparent 45%);
+    radial-gradient(circle at 0% 0%, rgba(255, 0, 127, 0.08) 0%, transparent 35%),
+    radial-gradient(circle at 100% 0%, rgba(255, 140, 0, 0.08) 0%, transparent 35%),
+    radial-gradient(circle at 50% 100%, rgba(255, 0, 127, 0.05) 0%, transparent 45%);
   background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-body);
@@ -531,8 +534,8 @@ select.form-input option, select option {
 }
 
 .dashboard-stat-gradient {
-  background: linear-gradient(135deg, rgba(124, 77, 255, 0.05) 0%, rgba(0, 229, 255, 0.05) 100%) !important;
-  border: 1px solid rgba(124, 77, 255, 0.15) !important;
+  background: linear-gradient(135deg, rgba(255, 0, 127, 0.05) 0%, rgba(255, 140, 0, 0.05) 100%) !important;
+  border: 1px solid rgba(255, 0, 127, 0.15) !important;
 }
 
 /* Scroll Reveal animations */
@@ -546,4 +549,65 @@ select.form-input option, select option {
 .scroll-reveal.reveal-active {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* SVG Outline Drawing Loader */
+@keyframes drawOutline {
+  0% { stroke-dashoffset: 200; }
+  50% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -200; }
+}
+
+@keyframes pulseGlow {
+  0% { filter: drop-shadow(0 0 4px rgba(255, 0, 127, 0.4)); opacity: 0.8; }
+  50% { filter: drop-shadow(0 0 12px rgba(255, 0, 127, 0.8)); opacity: 1; }
+  100% { filter: drop-shadow(0 0 4px rgba(255, 0, 127, 0.4)); opacity: 0.8; }
+}
+
+/* Custom Premium Tooltips */
+.tooltip-container {
+  position: relative;
+  cursor: help;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 240px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  text-align: center;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  font-weight: 500;
+  
+  position: absolute;
+  z-index: 100;
+  top: 110%; /* Position below */
+  left: 50%;
+  transform: translate(-50%, -4px);
+  
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.tooltip-text::after {
+  content: "";
+  position: absolute;
+  bottom: 100%; /* Arrow on top pointing up */
+  left: 50%;
+  margin-left: -6px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent var(--bg-tertiary) transparent;
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
 }

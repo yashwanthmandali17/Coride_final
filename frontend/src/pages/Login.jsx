@@ -3,6 +3,67 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import authAPI from '../services/authAPI';
 import { MapPin, Mail, Lock, LogIn, AlertCircle, Route, ShieldCheck, MessageSquare, IndianRupee, Sun, Moon, X, User, ArrowRight, UserPlus, Info, CheckCircle, ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const RotatingText = ({ words }) => {
+  const [displayText, setDisplayText] = useState('');
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    let timeout;
+    const currentWord = words[wordIndex];
+
+    if (isPaused) {
+      timeout = setTimeout(() => {
+        setIsPaused(false);
+        setIsDeleting(true);
+      }, 2000);
+    } else if (isDeleting) {
+      if (displayText === '') {
+        setIsDeleting(false);
+        setWordIndex((prev) => (prev + 1) % words.length);
+      } else {
+        timeout = setTimeout(() => {
+          setDisplayText(currentWord.substring(0, displayText.length - 1));
+        }, 50);
+      }
+    } else {
+      if (displayText === currentWord) {
+        setIsPaused(true);
+      } else {
+        timeout = setTimeout(() => {
+          setDisplayText(currentWord.substring(0, displayText.length + 1));
+        }, 100);
+      }
+    }
+
+    return () => clearTimeout(timeout);
+  }, [displayText, isDeleting, isPaused, wordIndex, words]);
+
+  return (
+    <span style={{ 
+      position: 'relative', 
+      display: 'inline-block', 
+      width: '4.8em', 
+      textAlign: 'right'
+    }}>
+      <span style={{ visibility: 'hidden' }}>Commute</span>
+      <span style={{ 
+        position: 'absolute', 
+        right: 0, 
+        top: 0, 
+        whiteSpace: 'nowrap',
+        background: 'var(--accent-gradient)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent'
+      }}>
+        {displayText}
+      </span>
+    </span>
+  );
+};
 
 const Login = () => {
   const { login, register } = useAuth();
@@ -26,6 +87,7 @@ const Login = () => {
   // Status states
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Theme states
   const [theme, setTheme] = useState(localStorage.getItem('coride_theme') || 'dark');
@@ -67,14 +129,19 @@ const Login = () => {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsSuccess(false);
     setLoading(true);
     try {
       await login(email, password);
-      setIsLoginOpen(false);
-      navigate('/dashboard');
+      setLoading(false);
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsLoginOpen(false);
+        navigate('/dashboard');
+        setIsSuccess(false);
+      }, 350);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to sign in. Please check your credentials.');
-    } finally {
       setLoading(false);
     }
   };
@@ -82,6 +149,7 @@ const Login = () => {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsSuccess(false);
 
     if (regPassword.length < 6) {
       setError('Password must be at least 6 characters long.');
@@ -91,20 +159,30 @@ const Login = () => {
     setLoading(true);
     try {
       await register(regName, regEmail, regPassword, regPhoto || null);
-      setIsRegisterOpen(false);
-      navigate('/dashboard');
+      setLoading(false);
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsRegisterOpen(false);
+        navigate('/dashboard');
+        setIsSuccess(false);
+      }, 350);
     } catch (err) {
       setError(err.response?.data?.detail || 'Registration failed. Check if email is already in use.');
-    } finally {
       setLoading(false);
     }
+  };
+
+  const getStatusBgColor = () => {
+    if (error) return theme === 'dark' ? '#5c1414' : '#ffd6d6';
+    if (isSuccess) return theme === 'dark' ? '#145c22' : '#d6ffd6';
+    return 'var(--bg-primary)';
   };
 
   // Google OAuth handler removed
 
   if (isLoginOpen) {
     return (
-      <div style={styles.splitWrapper} className="animate-fade">
+      <div style={{ ...styles.splitWrapper, backgroundColor: getStatusBgColor(), transition: 'background-color 0.5s ease' }} className="animate-fade">
         <div style={styles.splitFormSide}>
           <div style={styles.splitHeader}>
             <button onClick={() => { setError(''); setIsLoginOpen(false); }} style={styles.splitBackBtn}>
@@ -166,7 +244,12 @@ const Login = () => {
                     className="form-input"
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setPassword(val);
+                      if (val.length > 0 && val.length < 6) setError('Password must be at least 6 characters long.');
+                      else setError('');
+                    }}
                     style={{ paddingLeft: '2.5rem' }}
                     required
                   />
@@ -193,7 +276,7 @@ const Login = () => {
 
   if (isRegisterOpen) {
     return (
-      <div style={styles.splitWrapper} className="animate-fade">
+      <div style={{ ...styles.splitWrapper, backgroundColor: getStatusBgColor(), transition: 'background-color 0.5s ease' }} className="animate-fade">
         <div style={styles.splitFormSide}>
           <div style={styles.splitHeader}>
             <button onClick={() => { setError(''); setIsRegisterOpen(false); }} style={styles.splitBackBtn}>
@@ -265,7 +348,12 @@ const Login = () => {
                     className="form-input"
                     placeholder="•••••••• (Min. 6 chars)"
                     value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setRegPassword(val);
+                      if (val.length > 0 && val.length < 6) setError('Password must be at least 6 characters long.');
+                      else setError('');
+                    }}
                     style={{ paddingLeft: '2.5rem' }}
                     required
                   />
@@ -338,7 +426,10 @@ const Login = () => {
             <div style={styles.badgePromo}>🚀 SMART COMMUNITY RIDE SHARING</div>
             <h1 style={styles.heroTitle}>
               Ride Together<br />
-              <span style={{ background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Save Together</span>
+              <span>
+                <RotatingText words={['Save', 'Share', 'Commute', 'Connect']} />
+                <span style={{ background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}> Together</span>
+              </span>
             </h1>
             <p style={styles.heroText}>
               CoRide is the ultimate modular ride-sharing platform designed for communities, workplaces, and daily commuters. Coordinate trips, split fuel costs accurately, and travel sustainably together.
@@ -381,7 +472,7 @@ const Login = () => {
         <div style={styles.flashcardsGrid}>
           {/* Card 1 */}
           <div className="glass-panel glass-panel-hover" style={styles.flashcard}>
-            <div style={{ ...styles.cardIconBox, backgroundColor: 'rgba(0, 229, 255, 0.1)', color: 'var(--accent-secondary)' }}>
+            <div style={{ ...styles.cardIconBox, backgroundColor: 'rgba(255, 140, 0, 0.1)', color: 'var(--accent-secondary)' }}>
               <Route size={24} />
             </div>
             <h3 style={styles.cardTitle}>Smart Route Search</h3>
@@ -403,7 +494,7 @@ const Login = () => {
 
           {/* Card 3 */}
           <div className="glass-panel glass-panel-hover" style={styles.flashcard}>
-            <div style={{ ...styles.cardIconBox, backgroundColor: 'rgba(124, 77, 255, 0.1)', color: 'var(--accent-primary)' }}>
+            <div style={{ ...styles.cardIconBox, backgroundColor: 'rgba(255, 0, 127, 0.1)', color: 'var(--accent-primary)' }}>
               <MessageSquare size={24} />
             </div>
             <h3 style={styles.cardTitle}>WebSocket Chat</h3>
@@ -421,6 +512,34 @@ const Login = () => {
             <p style={styles.cardDesc}>
               Build trust in your community. Track user reliability scores based on completed/cancelled rides and rate fellow co-passengers.
             </p>
+          </div>
+        </div>
+
+        {/* Vehicle Options Grid */}
+        <div style={{...styles.vehicleCardsGrid, marginTop: '4rem', padding: '0 2rem'}}>
+          {/* Card 1 */}
+          <div className="glass-panel glass-panel-hover" style={styles.vehicleCard}>
+            <div style={styles.vehicleCardContent}>
+              <h3 style={styles.vehicleCardTitle}>Bike-Taxi</h3>
+              <p style={styles.vehicleCardDesc}>Beat traffic, ride quicker</p>
+            </div>
+            <img src="/assets/bike.png" alt="Bike Taxi" style={styles.vehicleImage} />
+          </div>
+          {/* Card 2 */}
+          <div className="glass-panel glass-panel-hover" style={styles.vehicleCard}>
+            <div style={styles.vehicleCardContent}>
+              <h3 style={styles.vehicleCardTitle}>Auto</h3>
+              <p style={styles.vehicleCardDesc}>Everyday autos, made easy</p>
+            </div>
+            <img src="/assets/auto.png" alt="Auto Rickshaw" style={styles.vehicleImage} />
+          </div>
+          {/* Card 3 */}
+          <div className="glass-panel glass-panel-hover" style={styles.vehicleCard}>
+            <div style={styles.vehicleCardContent}>
+              <h3 style={styles.vehicleCardTitle}>Cab</h3>
+              <p style={styles.vehicleCardDesc}>Comfort for every journey</p>
+            </div>
+            <img src="/assets/cab.png" alt="Cab Taxi" style={styles.vehicleImage} />
           </div>
         </div>
       </section>
@@ -485,6 +604,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     overflowX: 'hidden',
+    paddingTop: '75px',
   },
   splitWrapper: {
     display: 'flex',
@@ -557,7 +677,7 @@ const styles = {
   splitVisualOverlay: {
     position: 'absolute',
     inset: 0,
-    background: 'linear-gradient(135deg, rgba(124, 77, 255, 0.2) 0%, rgba(0, 229, 255, 0.15) 100%)',
+    background: 'linear-gradient(135deg, rgba(255, 0, 127, 0.2) 0%, rgba(255, 140, 0, 0.15) 100%)',
     zIndex: 1,
   },
   splitVisualImg: {
@@ -595,11 +715,12 @@ const styles = {
     borderBottom: '1px solid var(--border-color)',
     display: 'flex',
     alignItems: 'center',
-    position: 'sticky',
+    position: 'fixed',
     top: 0,
-    background: 'var(--glass-bg)',
-    backdropFilter: 'var(--glass-blur)',
-    zIndex: 100,
+    left: 0,
+    right: 0,
+    background: 'var(--bg-secondary)',
+    zIndex: 1000,
   },
   headerContainer: {
     maxWidth: '1200px',
@@ -621,10 +742,10 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg, rgba(124, 77, 255, 0.12) 0%, rgba(0, 229, 255, 0.12) 100%)',
-    borderRadius: '10px',
-    border: '1px solid rgba(124, 77, 255, 0.2)',
-    boxShadow: '0 0 10px rgba(124, 77, 255, 0.15)',
+    background: 'linear-gradient(135deg, rgba(255, 0, 127, 0.12) 0%, rgba(255, 140, 0, 0.12) 100%)',
+    backdropFilter: 'var(--glass-blur)',
+    border: '1px solid rgba(255, 0, 127, 0.2)',
+    boxShadow: '0 0 10px rgba(255, 0, 127, 0.15)',
   },
   logoText: {
     fontFamily: 'var(--font-heading)',
@@ -664,7 +785,7 @@ const styles = {
   },
   heroSection: {
     padding: '5rem 2rem 4rem 2rem',
-    background: 'radial-gradient(circle at 80% 20%, rgba(124, 77, 255, 0.08) 0%, transparent 50%)',
+    background: 'radial-gradient(circle at 80% 20%, rgba(255, 0, 127, 0.08) 0%, transparent 50%)',
   },
   heroContainer: {
     maxWidth: '800px',
@@ -684,8 +805,8 @@ const styles = {
     fontSize: '0.8rem',
     fontWeight: 700,
     color: 'var(--accent-primary)',
-    background: 'rgba(124, 77, 255, 0.1)',
-    border: '1px solid rgba(124, 77, 255, 0.25)',
+    background: 'rgba(255, 0, 127, 0.1)',
+    border: '1px solid rgba(255, 0, 127, 0.25)',
     padding: '0.4rem 0.8rem',
     borderRadius: 'var(--radius-full)',
     marginBottom: '1.5rem',
@@ -824,9 +945,44 @@ const styles = {
     color: 'var(--text-secondary)',
     lineHeight: '1.5',
   },
+  vehicleCardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '2rem',
+    width: '100%',
+    maxWidth: '1200px',
+  },
+  vehicleCard: {
+    padding: '2rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  vehicleCardContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem',
+  },
+  vehicleCardTitle: {
+    fontSize: '1.4rem',
+    fontWeight: 700,
+    color: 'var(--text-primary)',
+    margin: 0,
+  },
+  vehicleCardDesc: {
+    fontSize: '0.9rem',
+    color: 'var(--text-secondary)',
+    margin: 0,
+  },
+  vehicleImage: {
+    width: '80px',
+    height: '80px',
+    objectFit: 'contain',
+    filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.15))',
+  },
   detailsSection: {
     padding: '4rem 2rem 6rem 2rem',
-    background: 'radial-gradient(circle at 20% 80%, rgba(0, 229, 255, 0.05) 0%, transparent 40%)',
+    background: 'radial-gradient(circle at 20% 80%, rgba(255, 140, 0, 0.05) 0%, transparent 40%)',
   },
   detailsContainer: {
     maxWidth: '1200px',
@@ -866,7 +1022,7 @@ const styles = {
     width: '32px',
     height: '32px',
     borderRadius: '50%',
-    backgroundColor: 'rgba(124, 77, 255, 0.1)',
+    backgroundColor: 'rgba(255, 0, 127, 0.1)',
     color: 'var(--accent-primary)',
     display: 'flex',
     alignItems: 'center',
@@ -888,6 +1044,7 @@ const styles = {
     fontSize: '0.85rem',
     color: 'var(--text-muted)',
     marginTop: 'auto',
+    background: 'var(--bg-secondary)',
   },
   // Modal styles
   modalOverlay: {

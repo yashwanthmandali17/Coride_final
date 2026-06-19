@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from app.notifications.models import Notification
 
-def create_notification(db: Session, user_id: str, title: str, message: str, ride_id: str = None) -> Notification:
+def create_notification(db: Session, user_id: str, title: str, message: str, ride_id: str = None, commit: bool = True) -> Notification:
     """Create a database notification for a user and trigger real-time dispatch."""
     notif = Notification(
         user_id=user_id,
@@ -11,8 +11,11 @@ def create_notification(db: Session, user_id: str, title: str, message: str, rid
         ride_id=ride_id
     )
     db.add(notif)
-    db.commit()
-    db.refresh(notif)
+    if commit:
+        db.commit()
+        db.refresh(notif)
+    else:
+        db.flush()
     
     # Proactively broadcast using our WebSocket manager (imported inline to prevent circular dependencies)
     try:

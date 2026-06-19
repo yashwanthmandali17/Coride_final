@@ -63,8 +63,6 @@ def submit_rating(
         comment=payload.comment
     )
     db.add(db_rating)
-    db.commit()
-    db.refresh(db_rating)
 
     # 7. Recalculate average rating of reviewee
     avg_stars = db.query(func.avg(Rating.stars)).filter(
@@ -74,14 +72,16 @@ def submit_rating(
     reviewee = db.query(User).filter(User.id == payload.reviewee_id).first()
     if reviewee and avg_stars is not None:
         reviewee.average_rating = round(float(avg_stars), 2)
-        db.commit()
 
     # 8. Notify reviewee
     create_notification(
         db=db,
         user_id=payload.reviewee_id,
         title="New Rating Received",
-        message=f"You received a {payload.stars}-star rating from a ride member."
+        message=f"You received a {payload.stars}-star rating from a ride member.",
+        commit=False
     )
-
+    
+    db.commit()
+    db.refresh(db_rating)
     return db_rating

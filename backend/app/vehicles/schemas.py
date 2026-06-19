@@ -10,7 +10,8 @@ class VehicleBase(BaseModel):
     seat_capacity: int = Field(..., gt=0)
 
 class VehicleCreate(VehicleBase):
-    pass
+    rc_url: Optional[str] = None
+    rc_expiry: Optional[str] = None
 
 class VehicleUpdate(BaseModel):
     type: Optional[str] = None
@@ -18,6 +19,8 @@ class VehicleUpdate(BaseModel):
     model: Optional[str] = None
     registration_number: Optional[str] = None
     seat_capacity: Optional[int] = Field(None, gt=0)
+    rc_url: Optional[str] = None
+    rc_expiry: Optional[str] = None
 
 class VehicleResponse(VehicleBase):
     id: str
@@ -33,3 +36,7 @@ class VehicleResponse(VehicleBase):
 
     class Config:
         from_attributes = True
+
+class PrivateVehicleResponse(VehicleResponse):
+    rc_url: Optional[str] = None
+    rc_expiry: Optional[str] = None

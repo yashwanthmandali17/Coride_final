@@ -7,7 +7,7 @@ const chatAPI = {
   },
 
   getWebSocketURL: (rideId) => {
-    const token = localStorage.getItem('coride_token');
+    const token = sessionStorage.getItem('coride_token');
     // Replace http:// or https:// with ws:// or wss://
     let wsBaseUrl = API_BASE_URL.replace(/^http/, 'ws');
     return `${wsBaseUrl}/chat/ws/${rideId}?token=${token}`;

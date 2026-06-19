@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [publishedRides, setPublishedRides] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,15 +22,17 @@ const Dashboard = () => {
     try {
       setError('');
       
-      // Fetch user's published rides, bookings, and incoming requests in parallel
-      const [myPublished, myBookings, incoming] = await Promise.all([
+      // Fetch user's published rides, bookings, incoming requests, and vehicles in parallel
+      const [myPublished, myBookings, incoming, myVehicles] = await Promise.all([
         rideAPI.getMyRides(),
         rideAPI.getMyRequests(),
-        rideAPI.getIncomingRequests()
+        rideAPI.getIncomingRequests(),
+        rideAPI.getVehicles()
       ]);
 
       setPublishedRides(myPublished);
       setBookings(myBookings);
+      setVehicles(myVehicles);
       
       // Only display incoming requests that are pending and for active rides
       const activePending = incoming.filter(
@@ -58,6 +61,47 @@ const Dashboard = () => {
     }
   };
 
+  const getDocumentAlerts = () => {
+    const alerts = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const checkDocument = (expiryDateStr, name, link, buttonText) => {
+      if (!expiryDateStr) return;
+      const expiryDate = new Date(expiryDateStr);
+      expiryDate.setHours(0, 0, 0, 0);
+      const diffTime = expiryDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays < 0) {
+        alerts.push({
+          type: 'expired',
+          message: `Your ${name} has expired. Please update it immediately to stay compliant.`,
+          link,
+          buttonText
+        });
+      } else if (diffDays <= 7) {
+        alerts.push({
+          type: 'expiring',
+          message: `Your ${name} expires in ${diffDays} day${diffDays > 1 ? 's' : ''} (on ${new Date(expiryDateStr).toLocaleDateString()}). Please update it soon.`,
+          link,
+          buttonText
+        });
+      }
+    };
+
+    checkDocument(user?.driving_license_expiry, 'Driving License', '/wallet', 'Update Wallet');
+    
+    // Check RC expiry of each vehicle registered
+    vehicles.forEach((v) => {
+      checkDocument(v.rc_expiry, `Vehicle RC for ${v.brand} ${v.model} (${v.registration_number})`, '/vehicles', 'Update Vehicles');
+    });
+
+    return alerts;
+  };
+
+  const docAlerts = getDocumentAlerts();
+
   if (loading) {
     return <LoadingFacts fullPage={false} />;
   }
@@ -71,7 +115,10 @@ const Dashboard = () => {
           <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Welcome back, {user.name}!</p>
         </div>
         <div style={styles.statsGrid}>
-          <div style={{...styles.statCard, padding: '1rem', borderRadius: 'var(--radius-md)', background: 'var(--card-inner-bg)', border: '1px solid var(--card-inner-border)', minWidth: '160px', alignItems: 'flex-start'}}>
+          <div 
+            className="tooltip-container"
+            style={{...styles.statCard, padding: '1rem', borderRadius: 'var(--radius-md)', background: 'var(--card-inner-bg)', border: '1px solid var(--card-inner-border)', minWidth: '160px', alignItems: 'flex-start'}}
+          >
             <span style={styles.statLabel}>Reliability</span>
             <div style={styles.statValue}>
               <ShieldCheck size={20} color="var(--success)" />
@@ -80,6 +127,9 @@ const Dashboard = () => {
             <div style={styles.progressBarBg}>
               <div style={{...styles.progressBarFill, width: `${user.reliability_score}%`}} />
             </div>
+            <span className="tooltip-text" style={{ top: '105%' }}>
+              Your commitment rating: completing published rides increases it, while cancelling scheduled rides reduces it.
+            </span>
           </div>
           <div style={{...styles.statCard, padding: '1rem', borderRadius: 'var(--radius-md)', background: 'var(--card-inner-bg)', border: '1px solid var(--card-inner-border)', minWidth: '160px', alignItems: 'flex-start'}}>
             <span style={styles.statLabel}>Avg Rating</span>
@@ -100,6 +150,60 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {docAlerts.map((alert, idx) => (
+        <div 
+          key={idx} 
+          style={{
+            borderLeft: alert.type === 'expired' ? '4px solid var(--danger)' : '4px solid var(--warning)',
+            backgroundColor: 'var(--bg-secondary)',
+            borderTop: '1px solid var(--border-color)',
+            borderRight: '1px solid var(--border-color)',
+            borderBottom: '1px solid var(--border-color)',
+            color: 'var(--text-primary)',
+            marginBottom: '1.5rem',
+            padding: '1.2rem',
+            borderRadius: 'var(--radius-md)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            fontSize: '0.9rem',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+          }}
+        >
+          <ShieldAlert size={20} color={alert.type === 'expired' ? 'var(--danger)' : 'var(--warning)'} />
+          <div style={{ flex: 1 }}>
+            <span style={{ 
+              fontWeight: 700, 
+              display: 'block', 
+              marginBottom: '0.2rem', 
+              textTransform: 'uppercase', 
+              fontSize: '0.75rem', 
+              letterSpacing: '0.5px', 
+              color: alert.type === 'expired' ? 'var(--danger)' : 'var(--warning)' 
+            }}>
+              {alert.type === 'expired' ? 'Document Expired' : 'Document Expiring Soon'}
+            </span>
+            <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{alert.message}</span>
+          </div>
+          <Link 
+            to={alert.link} 
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: alert.type === 'expired' ? 'var(--danger)' : 'var(--warning)',
+              color: alert.type === 'expired' ? '#ffffff' : 'var(--warning-text)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            }}
+          >
+            {alert.buttonText}
+          </Link>
+        </div>
+      ))}
 
       {error && (
         <div style={styles.errorAlert}>

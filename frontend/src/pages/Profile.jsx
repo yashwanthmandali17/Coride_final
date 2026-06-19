@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import authAPI from '../services/authAPI';
+import { Link } from 'react-router-dom';
 import rideAPI from '../services/rideAPI';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import ConfirmModal from '../components/ConfirmModal';
-import { User, Award, ShieldCheck, Star, Plus, Trash2, ShieldAlert, CheckCircle, Car, Bike, PlusCircle, CreditCard } from 'lucide-react';
+import { User, ShieldCheck, Star, CreditCard, Car, CheckCircle, ShieldAlert } from 'lucide-react';
 
 const Profile = () => {
   const { user, updateProfile } = useAuth();
@@ -16,33 +15,45 @@ const Profile = () => {
   const [profileSuccess, setProfileSuccess] = useState('');
   const [profileError, setProfileError] = useState('');
   const [profileLoading, setProfileLoading] = useState(false);
-
-  // Vehicle state
   const [vehicles, setVehicles] = useState([]);
-  const [vType, setVType] = useState('car');
-  const [vBrand, setVBrand] = useState('');
-  const [vModel, setVModel] = useState('');
-  const [vRegNum, setVRegNum] = useState('');
-  const [vCapacity, setVCapacity] = useState(4);
-  const [vehicleSuccess, setVehicleSuccess] = useState('');
-  const [vehicleError, setVehicleError] = useState('');
-  const [vehicleLoading, setVehicleLoading] = useState(false);
-  const [vehicleToDelete, setVehicleToDelete] = useState(null);
+
+  // Sync state with user context updates
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setProfilePhoto(user.profile_photo || '');
+      loadVehicles();
+    }
+  }, [user]);
 
   const loadVehicles = async () => {
     try {
       const data = await rideAPI.getVehicles();
       setVehicles(data);
     } catch (err) {
-      console.error("Failed to load vehicles:", err);
+      console.error("Failed to load vehicles in profile:", err);
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      loadVehicles();
+  const getDlExpiryStatusBadge = (expiryDateStr) => {
+    if (!expiryDateStr) {
+      return <span style={{ ...styles.badge, ...styles.badgeMissing }}>Not Uploaded</span>;
     }
-  }, [user]);
+    const expiryDate = new Date(expiryDateStr);
+    const today = new Date();
+    expiryDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diffTime = expiryDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return <span style={{ ...styles.badge, ...styles.badgeExpired }}>Expired</span>;
+    } else if (diffDays <= 7) {
+      return <span style={{ ...styles.badge, ...styles.badgeWarning }}>Expires in {diffDays} day{diffDays > 1 ? 's' : ''}</span>;
+    } else {
+      return <span style={{ ...styles.badge, ...styles.badgeValid }}>Valid</span>;
+    }
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -53,86 +64,22 @@ const Profile = () => {
     try {
       await updateProfile(name, profilePhoto || null);
       setProfileSuccess('Profile updated successfully!');
+      addToast('Success', 'Profile updated successfully!', 'success');
       setTimeout(() => setProfileSuccess(''), 3000);
     } catch (err) {
       setProfileError('Failed to update profile. Please try again.');
+      addToast('Error', 'Failed to update profile.', 'error');
     } finally {
       setProfileLoading(false);
     }
   };
 
-  const handleAddVehicle = async (e) => {
-    e.preventDefault();
-    setVehicleSuccess('');
-    setVehicleError('');
-    setVehicleLoading(true);
-
-    try {
-      await rideAPI.addVehicle({
-        type: vType,
-        brand: vBrand,
-        model: vModel,
-        registration_number: vRegNum,
-        seat_capacity: parseInt(vCapacity)
-      });
-      setVehicleSuccess('Vehicle added successfully!');
-      
-      // Reset vehicle fields
-      setVBrand('');
-      setVModel('');
-      setVRegNum('');
-      setVCapacity(vType === 'car' ? 4 : (vType === 'auto' ? 3 : 1));
-      
-      // Reload vehicle list
-      loadVehicles();
-      setTimeout(() => setVehicleSuccess(''), 3000);
-    } catch (err) {
-      setVehicleError(err.response?.data?.detail || 'Failed to register vehicle. Verify unique registration number.');
-    } finally {
-      setVehicleLoading(false);
-    }
-  };
-
-  const handleDeleteVehicle = (vehicleId) => {
-    setVehicleToDelete(vehicleId);
-  };
-
-  const confirmDeleteVehicle = async () => {
-    if (!vehicleToDelete) return;
-    try {
-      await rideAPI.deleteVehicle(vehicleToDelete);
-      addToast('Success', 'Vehicle deleted successfully.', 'success');
-      loadVehicles();
-    } catch (err) {
-      addToast('Error', 'Failed to delete vehicle. It may be linked to active published rides.', 'error');
-    } finally {
-      setVehicleToDelete(null);
-    }
-  };
-
-  const handleVTypeChange = (e) => {
-    const type = e.target.value;
-    setVType(type);
-    // Set typical defaults
-    setVCapacity(type === 'car' ? 4 : (type === 'auto' ? 3 : 1));
-  };
-
   return (
     <div style={styles.container} className="animate-fade">
-      <ConfirmModal
-        isOpen={!!vehicleToDelete}
-        title="Delete Vehicle"
-        message="Are you sure you want to delete this vehicle? Any active rides using this vehicle will not be deleteable unless cancelled."
-        confirmText="Delete Vehicle"
-        type="danger"
-        onConfirm={confirmDeleteVehicle}
-        onCancel={() => setVehicleToDelete(null)}
-      />
-
       <div style={styles.heroSection}>
         <h2 style={styles.heroTitle}>Profile Management</h2>
         <p style={styles.heroSubtitle}>
-          Manage your personal details, verify passenger metrics, and register your car or bike vehicle logs.
+          Manage your personal details, verify passenger metrics, and access your digital wallet or registered vehicles.
         </p>
       </div>
 
@@ -146,18 +93,23 @@ const Profile = () => {
             </h3>
 
             <div style={styles.metricsBox}>
-              <div style={styles.metricItem}>
+              <div className="tooltip-container" style={styles.metricItem}>
                 <ShieldCheck size={20} color="var(--accent-secondary)" />
                 <div>
                   <span style={styles.metricLabel}>Reliability Score</span>
-                  <span style={styles.metricVal}>{user.reliability_score.toFixed(0)}%</span>
+                  <span style={styles.metricVal}>{user?.reliability_score?.toFixed(0) || 100}%</span>
                 </div>
+                <span className="tooltip-text" style={{ top: '105%' }}>
+                  Your commitment rating: completing published rides increases it, while cancelling scheduled rides reduces it.
+                </span>
               </div>
               <div style={styles.metricItem}>
                 <Star size={20} fill="var(--warning)" color="var(--warning)" />
                 <div>
                   <span style={styles.metricLabel}>Average Rating</span>
-                  <span style={styles.metricVal}>{user.average_rating > 0 ? `${user.average_rating.toFixed(1)} / 5` : 'No reviews'}</span>
+                  <span style={styles.metricVal}>
+                    {user?.average_rating > 0 ? `${user.average_rating.toFixed(1)} / 5` : 'No reviews'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -193,7 +145,7 @@ const Profile = () => {
                 <input
                   type="email"
                   className="form-input"
-                  value={user.email}
+                  value={user?.email || ''}
                   style={{ opacity: 0.6, cursor: 'not-allowed' }}
                   disabled
                 />
@@ -218,147 +170,54 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Right Column: Vehicles CRUD */}
+        {/* Right Column: Wallet & Vehicles Hub Cards */}
         <div style={styles.rightCol}>
-          {/* Vehicles List */}
+          {/* Card 1: Digital Wallet */}
           <div className="glass-panel" style={{ ...styles.panel, marginBottom: '2rem' }}>
-            <h3 style={styles.panelTitle}>Registered Vehicles</h3>
-            <div style={styles.vehiclesList}>
-              {vehicles.length === 0 ? (
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '1rem' }}>
-                  No vehicles registered yet. Add one below to start offering rides.
-                </div>
-              ) : (
-                vehicles.map((v) => (
-                  <div key={v.id} style={styles.vehicleItem}>
-                    <div style={styles.vehicleIcon}>
-                      {v.type === 'car' ? (
-                        <Car size={20} color="var(--accent-primary)" />
-                      ) : v.type === 'auto' ? (
-                        <span style={{ fontSize: '1.2rem', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>🛺</span>
-                      ) : (
-                        <Bike size={20} color="var(--accent-secondary)" />
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <strong style={styles.vehicleName}>{v.brand} {v.model}</strong>
-                      <div style={styles.vehicleMeta}>
-                        <span>{v.registration_number}</span>
-                        <span>•</span>
-                        <span>Capacity: {v.seat_capacity} passenger{v.seat_capacity > 1 ? 's' : ''}</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteVehicle(v.id)}
-                      style={styles.deleteBtn}
-                      title="Remove Vehicle"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))
-              )}
+            <h3 style={styles.panelTitle}>
+              <CreditCard size={18} color="var(--accent-secondary)" /> Digital Wallet
+            </h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              Securely store and manage your Driving License documents for fast verification at police checkposts. Stored privately and visible only to you.
+            </p>
+            
+            <div style={styles.hubStatusBox}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>License Status:</span>
+              {getDlExpiryStatusBadge(user?.driving_license_expiry)}
             </div>
+
+            <Link to="/wallet" className="btn btn-secondary" style={{ width: '100%', display: 'block', textDecoration: 'none', textAlign: 'center', fontWeight: 600 }}>
+              Go to Digital Wallet
+            </Link>
           </div>
 
-          {/* Add Vehicle Form */}
+          {/* Card 2: Registered Vehicles */}
           <div className="glass-panel" style={styles.panel}>
             <h3 style={styles.panelTitle}>
-              <PlusCircle size={18} color="var(--accent-secondary)" /> Add New Vehicle
+              <Car size={18} color="var(--accent-primary)" /> Registered Vehicles
             </h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              Add and manage your cars, bikes, or autos. Upload Registration Certificates (RC) to ensure seamless passenger bookings and checkpoint clearance.
+            </p>
+            
+            <div style={styles.hubStatusBox}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Registered Vehicles:</span>
+              <span style={{ 
+                fontSize: '0.8rem', 
+                fontWeight: 600, 
+                padding: '0.25rem 0.75rem', 
+                borderRadius: '12px', 
+                backgroundColor: 'rgba(255, 0, 127, 0.1)', 
+                color: 'var(--accent-primary)',
+                border: '1px solid rgba(255, 0, 127, 0.2)'
+              }}>
+                {vehicles.length} Vehicle{vehicles.length !== 1 ? 's' : ''}
+              </span>
+            </div>
 
-            {vehicleSuccess && (
-              <div style={styles.successAlert}>
-                <CheckCircle size={16} />
-                <span>{vehicleSuccess}</span>
-              </div>
-            )}
-            {vehicleError && (
-              <div style={styles.errorAlert}>
-                <ShieldAlert size={16} />
-                <span>{vehicleError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleAddVehicle}>
-              <div style={styles.formGrid}>
-                {/* Vehicle Type */}
-                <div className="form-group">
-                  <label className="form-label">Vehicle Type</label>
-                  <select
-                    className="form-input"
-                    value={vType}
-                    onChange={handleVTypeChange}
-                    required
-                  >
-                    <option value="car" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>🚗 Car</option>
-                    <option value="bike" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>🏍️ Bike</option>
-                    <option value="auto" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>🛺 Auto (3-Seater)</option>
-                  </select>
-                </div>
-
-                {/* Seat Capacity */}
-                <div className="form-group">
-                  <label className="form-label">Max Seat Capacity</label>
-                  <input
-                    type="number"
-                    className="form-input"
-                    min="1"
-                    max={vType === 'car' ? 8 : (vType === 'auto' ? 3 : 1)}
-                    value={vCapacity}
-                    onChange={(e) => setVCapacity(parseInt(e.target.value))}
-                    required
-                  />
-                </div>
-
-                {/* Brand */}
-                <div className="form-group">
-                  <label className="form-label">Brand</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Toyota, Honda"
-                    value={vBrand}
-                    onChange={(e) => setVBrand(e.target.value)}
-                    required
-                  />
-                </div>
-
-                {/* Model */}
-                <div className="form-group">
-                  <label className="form-label">Model Name</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Corolla, Civic"
-                    value={vModel}
-                    onChange={(e) => setVModel(e.target.value)}
-                    required
-                  />
-                </div>
-
-                {/* Registration Number */}
-                <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label className="form-label">Registration Number</label>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <CreditCard size={18} style={styles.inputIcon} />
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. DL3C-AB1234"
-                      value={vRegNum}
-                      onChange={(e) => setVRegNum(e.target.value)}
-                      style={{ paddingLeft: '2.5rem' }}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={vehicleLoading}>
-                {vehicleLoading ? 'Adding Vehicle...' : 'Register Vehicle'}
-              </button>
-            </form>
+            <Link to="/vehicles" className="btn btn-secondary" style={{ width: '100%', display: 'block', textDecoration: 'none', textAlign: 'center', fontWeight: 600 }}>
+              Manage Vehicles
+            </Link>
           </div>
         </div>
 
@@ -388,7 +247,7 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1.2fr',
+    gridTemplateColumns: '1fr 1.1fr',
     gap: '2rem',
   },
   leftCol: {
@@ -442,70 +301,42 @@ const styles = {
     fontFamily: 'var(--font-heading)',
     marginTop: '0.1rem',
   },
-  vehiclesList: {
+  hubStatusBox: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  vehicleItem: {
-    display: 'flex',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '1rem',
-    padding: '0.75rem 1rem',
     backgroundColor: 'var(--card-inner-bg)',
-    borderRadius: 'var(--radius-sm)',
+    padding: '0.75rem 1rem',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--card-inner-border)',
+    marginBottom: '1.5rem',
+  },
+  badge: {
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    padding: '0.25rem 0.75rem',
+    borderRadius: '12px',
+    display: 'inline-block',
+  },
+  badgeMissing: {
+    backgroundColor: 'var(--bg-tertiary)',
+    color: 'var(--text-secondary)',
     border: '1px solid var(--border-color)',
   },
-  vehicleIcon: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--bg-tertiary)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+  badgeExpired: {
+    backgroundColor: 'rgba(255, 23, 68, 0.15)',
+    color: 'var(--danger)',
+    border: '1px solid rgba(255, 23, 68, 0.3)',
   },
-  vehicleName: {
-    fontSize: '0.9rem',
-    fontWeight: 600,
+  badgeWarning: {
+    backgroundColor: 'rgba(255, 140, 0, 0.15)',
+    color: 'var(--warning)',
+    border: '1px solid rgba(255, 140, 0, 0.3)',
   },
-  vehicleMeta: {
-    display: 'flex',
-    gap: '0.5rem',
-    fontSize: '0.75rem',
-    color: 'var(--text-secondary)',
-    marginTop: '0.1rem',
-  },
-  deleteBtn: {
-    background: 'none',
-    border: 'none',
-    color: 'var(--text-muted)',
-    cursor: 'pointer',
-    padding: '0.5rem',
-    transition: 'color var(--transition-fast)',
-  },
-  deleteBtn: {
-    background: 'none',
-    border: 'none',
-    color: 'var(--text-muted)',
-    cursor: 'pointer',
-    padding: '0.5rem',
-  },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '1.25rem',
-  },
-  inputWrapper: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  inputIcon: {
-    position: 'absolute',
-    left: '12px',
-    color: 'var(--text-muted)',
-    pointerEvents: 'none',
+  badgeValid: {
+    backgroundColor: 'rgba(0, 230, 118, 0.15)',
+    color: 'var(--success)',
+    border: '1px solid rgba(0, 230, 118, 0.3)',
   },
   successAlert: {
     backgroundColor: 'rgba(0, 230, 118, 0.1)',
@@ -539,7 +370,6 @@ if (typeof window !== 'undefined') {
   styleSheet.innerText = `
     @media (max-width: 900px) {
       div[style*="grid"] { grid-template-columns: 1fr !important; }
-      div[style*="formGrid"] { grid-template-columns: 1fr !important; }
     }
   `;
   document.head.appendChild(styleSheet);

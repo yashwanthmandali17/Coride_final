@@ -1,4 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { Car } from 'lucide-react';
+
+const CustomMotorcycle = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <circle cx="18" cy="16" r="3.5" />
+    <circle cx="6" cy="16" r="3.5" />
+    <path d="M15 9 L17.5 14" />
+    <path d="M14 9 L15.5 8" />
+    <path d="M6 16 L8.5 10 L14 10 L11 14 Z" />
+    <path d="M8.5 10 L10.5 7 L14 8 L15 11" />
+    <path d="M8 10 L10.5 10" strokeWidth="2.5" />
+    <path d="M9 16 L14 16 L15 15" />
+  </svg>
+);
 
 const AUTO_FACTS = [
   "The average car has over 30,000 unique parts.",
@@ -17,18 +40,26 @@ const AUTO_FACTS = [
 
 const LoadingFacts = ({ fullPage = false }) => {
   const [fact, setFact] = useState('');
+  const [iconType, setIconType] = useState('bike');
 
   useEffect(() => {
     // Pick a random fact
     const randomIndex = Math.floor(Math.random() * AUTO_FACTS.length);
     setFact(AUTO_FACTS[randomIndex]);
+    setIconType(Math.random() > 0.5 ? 'bike' : 'car');
   }, []);
 
   const containerStyle = fullPage ? styles.fullPageContainer : styles.sectionContainer;
 
   return (
     <div style={containerStyle} className="animate-fade">
-      <div style={styles.spinner} />
+      <div style={styles.loaderContainer}>
+        {iconType === 'bike' ? (
+          <CustomMotorcycle style={styles.svgLoader} width={64} height={64} />
+        ) : (
+          <Car style={styles.svgLoader} size={64} />
+        )}
+      </div>
       <div style={styles.factBox}>
         <span style={styles.factLabel}>Did you know?</span>
         <p style={styles.factText}>{fact}</p>
@@ -60,13 +91,17 @@ const styles = {
     width: '100%',
     textAlign: 'center',
   },
-  spinner: {
-    width: '44px',
-    height: '44px',
-    border: '4px solid var(--bg-tertiary)',
-    borderTopColor: 'var(--accent-primary)',
-    borderRadius: '50%',
-    animation: 'spin 1.2s linear infinite',
+  loaderContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '1rem',
+  },
+  svgLoader: {
+    stroke: 'var(--accent-primary)',
+    strokeWidth: 1.5,
+    strokeDasharray: '200',
+    animation: 'drawOutline 2.5s ease-in-out infinite, pulseGlow 2.5s ease-in-out infinite',
   },
   factBox: {
     maxWidth: '460px',

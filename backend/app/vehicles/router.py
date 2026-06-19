@@ -3,13 +3,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.vehicles.models import Vehicle
-from app.vehicles.schemas import VehicleCreate, VehicleUpdate, VehicleResponse
+from app.vehicles.schemas import VehicleCreate, VehicleUpdate, VehicleResponse, PrivateVehicleResponse
 from app.auth.dependencies import get_current_user
 from app.users.models import User
 
 router = APIRouter(prefix="/vehicles", tags=["vehicles"])
 
-@router.post("", response_model=VehicleResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=PrivateVehicleResponse, status_code=status.HTTP_201_CREATED)
 def create_vehicle(
     payload: VehicleCreate,
     current_user: User = Depends(get_current_user),
@@ -35,21 +35,23 @@ def create_vehicle(
         brand=payload.brand,
         model=payload.model,
         registration_number=payload.registration_number,
-        seat_capacity=payload.seat_capacity
+        seat_capacity=payload.seat_capacity,
+        rc_url=payload.rc_url,
+        rc_expiry=payload.rc_expiry
     )
     db.add(db_vehicle)
     db.commit()
     db.refresh(db_vehicle)
     return db_vehicle
 
-@router.get("", response_model=List[VehicleResponse])
+@router.get("", response_model=List[PrivateVehicleResponse])
 def list_my_vehicles(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     return db.query(Vehicle).filter(Vehicle.user_id == current_user.id).all()
 
-@router.get("/{vehicle_id}", response_model=VehicleResponse)
+@router.get("/{vehicle_id}", response_model=PrivateVehicleResponse)
 def get_vehicle_details(
     vehicle_id: str,
     current_user: User = Depends(get_current_user),
@@ -69,7 +71,7 @@ def get_vehicle_details(
         )
     return vehicle
 
-@router.put("/{vehicle_id}", response_model=VehicleResponse)
+@router.put("/{vehicle_id}", response_model=PrivateVehicleResponse)
 def update_vehicle(
     vehicle_id: str,
     payload: VehicleUpdate,
@@ -109,6 +111,11 @@ def update_vehicle(
         if existing:
             raise HTTPException(status_code=400, detail="Registration number already in use.")
         vehicle.registration_number = payload.registration_number
+        
+    if payload.rc_url is not None:
+        vehicle.rc_url = None if payload.rc_url == "" else payload.rc_url
+    if payload.rc_expiry is not None:
+        vehicle.rc_expiry = None if payload.rc_expiry == "" else payload.rc_expiry
         
     db.commit()
     db.refresh(vehicle)

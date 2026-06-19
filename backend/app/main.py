@@ -20,6 +20,24 @@ Base.metadata.create_all(bind=engine)
 from sqlalchemy import inspect, text
 try:
     inspector = inspect(engine)
+    if "users" in inspector.get_table_names():
+        columns = [col["name"] for col in inspector.get_columns("users")]
+        if "driving_license_url" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN driving_license_url TEXT;"))
+        if "driving_license_expiry" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN driving_license_expiry VARCHAR(10);"))
+
+    if "vehicles" in inspector.get_table_names():
+        columns = [col["name"] for col in inspector.get_columns("vehicles")]
+        if "rc_url" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE vehicles ADD COLUMN rc_url TEXT;"))
+        if "rc_expiry" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE vehicles ADD COLUMN rc_expiry VARCHAR(10);"))
+
     if "notifications" in inspector.get_table_names():
         columns = [col["name"] for col in inspector.get_columns("notifications")]
         if "ride_id" not in columns:

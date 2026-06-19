@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
           const userData = await authAPI.getMe();
           setUser(userData);
           // Sync cache
-          localStorage.setItem('coride_user', JSON.stringify({
+          sessionStorage.setItem('coride_user', JSON.stringify({
             id: userData.id,
             name: userData.name
           }));
@@ -69,8 +69,15 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const updateProfile = async (name, profilePhoto) => {
-    const updated = await authAPI.updateProfile(name, profilePhoto);
+  const updateProfile = async (name, profilePhoto, drivingLicenseUrl, drivingLicenseExpiry, vehicleRcUrl, vehicleRcExpiry) => {
+    const updated = await authAPI.updateProfile(
+      name,
+      profilePhoto,
+      drivingLicenseUrl,
+      drivingLicenseExpiry,
+      vehicleRcUrl,
+      vehicleRcExpiry
+    );
     setUser(updated);
     return updated;
   };

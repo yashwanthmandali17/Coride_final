@@ -17,6 +17,11 @@ const rideAPI = {
     return true;
   },
 
+  updateVehicle: async (vehicleId, vehicleData) => {
+    const response = await api.put(`/vehicles/${vehicleId}`, vehicleData);
+    return response.data;
+  },
+
   // Rides Management
   publishRide: async (rideData) => {
     const response = await api.post('/rides', rideData);

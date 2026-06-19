@@ -185,6 +185,7 @@ const RideDetails = () => {
   const isDriver = ride.owner_id === user.id;
   const isPassenger = participants.some(p => p.user_id === user.id && p.role === 'passenger');
   const isConfirmedParticipant = isDriver || isPassenger;
+  const hasPassengers = participants.some(p => p.role === 'passenger');
   
   // Find current user's participant confirmation status
   const myParticipantRow = participants.find(p => p.user_id === user.id);
@@ -299,9 +300,15 @@ const RideDetails = () => {
                 <div style={styles.actionRow}>
                   {ride.status === 'published' && (
                     <>
-                      <button onClick={handleStartRide} className="btn btn-success" style={{ flex: 1 }}>
-                        <CheckCircle2 size={16} /> Start Ride
-                      </button>
+                      {hasPassengers ? (
+                        <button onClick={handleStartRide} className="btn btn-success" style={{ flex: 1 }}>
+                          <CheckCircle2 size={16} /> Start Ride
+                        </button>
+                      ) : (
+                        <button onClick={handleConfirmCompletion} className="btn btn-success" style={{ flex: 1 }}>
+                          <CheckCircle2 size={16} /> Complete Ride
+                        </button>
+                      )}
                       <button onClick={handleCancelRide} className="btn btn-danger">
                         Cancel Ride
                       </button>
@@ -422,7 +429,7 @@ const RideDetails = () => {
                   )}
 
                   {ride.status === 'completed' && (
-                    <div style={styles.infoText}>This ride is completed. Leave reviews below!</div>
+                    <div style={styles.infoText}>This ride is completed. Leave reviews!</div>
                   )}
                   {ride.status === 'cancelled' && (
                     <div style={styles.infoTextError}>This ride was cancelled.</div>

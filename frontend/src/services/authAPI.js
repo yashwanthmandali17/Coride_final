@@ -4,8 +4,8 @@ const authAPI = {
   login: async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
     if (response.data && response.data.access_token) {
-      localStorage.setItem('coride_token', response.data.access_token);
-      localStorage.setItem('coride_user', JSON.stringify({
+      sessionStorage.setItem('coride_token', response.data.access_token);
+      sessionStorage.setItem('coride_user', JSON.stringify({
         id: response.data.user_id,
         name: response.data.name,
       }));
@@ -21,8 +21,8 @@ const authAPI = {
       profile_photo: profilePhoto,
     });
     if (response.data && response.data.access_token) {
-      localStorage.setItem('coride_token', response.data.access_token);
-      localStorage.setItem('coride_user', JSON.stringify({
+      sessionStorage.setItem('coride_token', response.data.access_token);
+      sessionStorage.setItem('coride_user', JSON.stringify({
         id: response.data.user_id,
         name: response.data.name,
       }));
@@ -40,10 +40,14 @@ const authAPI = {
     return response.data;
   },
 
-  updateProfile: async (name, profilePhoto) => {
+  updateProfile: async (name, profilePhoto, drivingLicenseUrl = null, drivingLicenseExpiry = null, vehicleRcUrl = null, vehicleRcExpiry = null) => {
     const response = await api.put('/users/me', {
       name,
       profile_photo: profilePhoto,
+      driving_license_url: drivingLicenseUrl,
+      driving_license_expiry: drivingLicenseExpiry,
+      vehicle_rc_url: vehicleRcUrl,
+      vehicle_rc_expiry: vehicleRcExpiry,
     });
     return response.data;
   },
@@ -54,17 +58,17 @@ const authAPI = {
   },
 
   logout: () => {
-    localStorage.removeItem('coride_token');
-    localStorage.removeItem('coride_user');
+    sessionStorage.removeItem('coride_token');
+    sessionStorage.removeItem('coride_user');
   },
 
   getCurrentUser: () => {
-    const userStr = localStorage.getItem('coride_user');
+    const userStr = sessionStorage.getItem('coride_user');
     return userStr ? JSON.parse(userStr) : null;
   },
 
   getToken: () => {
-    return localStorage.getItem('coride_token');
+    return sessionStorage.getItem('coride_token');
   }
 };
 

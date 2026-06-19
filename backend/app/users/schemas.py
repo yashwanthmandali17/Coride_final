@@ -10,6 +10,8 @@ class UserBase(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     profile_photo: Optional[str] = None
+    driving_license_url: Optional[str] = None
+    driving_license_expiry: Optional[str] = None
 
 class UserResponse(UserBase):
     id: str
@@ -26,3 +28,7 @@ class UserResponse(UserBase):
 
     class Config:
         from_attributes = True
+
+class CurrentUserResponse(UserResponse):
+    driving_license_url: Optional[str] = None
+    driving_license_expiry: Optional[str] = None

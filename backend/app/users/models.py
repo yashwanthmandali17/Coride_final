@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Float, DateTime
+from sqlalchemy import Column, String, Float, DateTime, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -14,6 +14,8 @@ class User(Base):
     profile_photo = Column(String(500), nullable=True)
     average_rating = Column(Float, default=0.00)
     reliability_score = Column(Float, default=100.00)
+    driving_license_url = Column(Text, nullable=True)
+    driving_license_expiry = Column(String(10), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

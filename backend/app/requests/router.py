@@ -62,7 +62,6 @@ def request_ride(
         action="Request Sent"
     )
     db.add(audit_log)
-    db.commit()
     
     # Notify Driver
     if payload.pickup_location and payload.dropoff_location:
@@ -75,9 +74,11 @@ def request_ride(
         user_id=ride.owner_id,
         title="New Ride Request",
         message=notif_msg,
-        ride_id=ride.id
+        ride_id=ride.id,
+        commit=False
     )
     
+    db.commit()
     db.refresh(db_request)
     return db_request
 
@@ -137,7 +138,8 @@ def update_request_status(
                 user_id=passenger.id,
                 title="Request Accepted!",
                 message=f"Your request for the ride from {ride.source} to {ride.destination} was accepted.",
-                ride_id=ride.id
+                ride_id=ride.id,
+                commit=False
             )
             
         elif payload.status == "rejected":
@@ -157,7 +159,8 @@ def update_request_status(
                 user_id=passenger.id,
                 title="Request Rejected",
                 message=f"Your request for the ride from {ride.source} to {ride.destination} was rejected.",
-                ride_id=ride.id
+                ride_id=ride.id,
+                commit=False
             )
             
     elif payload.status == "cancelled":
@@ -197,7 +200,8 @@ def update_request_status(
             user_id=ride.owner_id,
             title="Request Cancelled",
             message=f"{current_user.name} has cancelled their request/seat for the ride to {ride.destination}.",
-            ride_id=ride.id
+            ride_id=ride.id,
+            commit=False
         )
         
     db.commit()
@@ -263,6 +267,7 @@ def confirm_ride_completion(
         return {"detail": "You have already confirmed completion for this ride."}
         
     participant.confirmed_completion = True
+    db.flush()
     
     # Audit log
     audit = RideHistory(
@@ -284,7 +289,8 @@ def confirm_ride_completion(
             user_id=op.user_id,
             title="Completion Confirmed",
             message=f"{current_user.name} ({participant.role}) has confirmed the completion of the ride.",
-            ride_id=ride.id
+            ride_id=ride.id,
+            commit=False
         )
         
     # Check if double-party conditions are met to transition ride to 'completed'

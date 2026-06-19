@@ -13,7 +13,7 @@ const api = axios.create({
 // Request interceptor to attach JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('coride_token');
+    const token = sessionStorage.getItem('coride_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,8 +30,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // Clear token and redirect to login if session expires
-      localStorage.removeItem('coride_token');
-      localStorage.removeItem('coride_user');
+      sessionStorage.removeItem('coride_token');
+      sessionStorage.removeItem('coride_user');
       if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
         window.location.href = '/login?expired=true';
       }

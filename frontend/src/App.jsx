@@ -14,6 +14,8 @@ import RideDetails from './pages/RideDetails';
 import Chat from './pages/Chat';
 import Profile from './pages/Profile';
 import RideHistory from './pages/RideHistory';
+import DigitalWallet from './pages/DigitalWallet';
+import Vehicles from './pages/Vehicles';
 
 // Toast Container overlay component
 const ToastOverlay = () => {
@@ -119,6 +121,22 @@ function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <Profile />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/wallet" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <DigitalWallet />
+                </AppLayout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/vehicles" element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Vehicles />
                 </AppLayout>
               </ProtectedRoute>
             } />

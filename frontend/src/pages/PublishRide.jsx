@@ -4,6 +4,7 @@ import rideAPI from '../services/rideAPI';
 import RouteMap from '../components/RouteMap';
 import { PlusCircle, MapPin, Calendar, Users, IndianRupee, Award, AlertTriangle, CheckCircle } from 'lucide-react';
 import LoadingFacts from '../components/LoadingFacts';
+import { useAuth } from '../contexts/AuthContext';
 
 // Simple JS implementation of Haversine formula
 const localHaversine = (lat1, lon1, lat2, lon2) => {
@@ -18,6 +19,7 @@ const localHaversine = (lat1, lon1, lat2, lon2) => {
 };
 
 const PublishRide = () => {
+  const { user } = useAuth();
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
   const [source, setSource] = useState({ lat: null, lng: null, address: '' });
@@ -292,6 +294,10 @@ const PublishRide = () => {
 
   const selectedVehicle = vehicles.find(v => v.id === selectedVehicleId);
 
+  const hasDl = !!user?.driving_license_url;
+  const hasRc = !!selectedVehicle?.rc_url;
+  const showWalletTip = !hasDl || (vehicles.length > 0 && !hasRc);
+
   return (
     <div style={styles.container} className="animate-fade">
       <div style={styles.heroSection}>
@@ -300,6 +306,24 @@ const PublishRide = () => {
           Select your vehicle, enter start and end locations, customize your cost split, and publish.
         </p>
       </div>
+
+      {showWalletTip && (
+        <div style={styles.tipBox} className="glass-panel animate-slide">
+          <div style={styles.tipHeader}>
+            <span style={{ fontSize: '1.2rem' }}>💡</span>
+            <span style={styles.tipTitle}>Speed Checkpoint Verification</span>
+          </div>
+          <p style={styles.tipText}>
+            {!hasDl && !hasRc ? (
+              <>We notice you haven't uploaded your <strong>Driving License</strong> or your vehicle's <strong>RC Document</strong>. Add them in your <Link to="/profile" style={styles.tipLink}>Digital Wallet</Link> for secure, instant retrieval at checkpoints.</>
+            ) : !hasDl ? (
+              <>We notice you haven't uploaded your <strong>Driving License</strong>. Add it in your <Link to="/profile" style={styles.tipLink}>Digital Wallet</Link> for secure, instant retrieval at checkpoints.</>
+            ) : (
+              <>We notice you haven't uploaded the <strong>RC Document</strong> for the selected vehicle ({selectedVehicle?.brand} {selectedVehicle?.model}). Upload it in your <Link to="/profile" style={styles.tipLink}>Digital Wallet</Link> for secure, instant retrieval at checkpoints.</>
+            )}
+          </p>
+        </div>
+      )}
 
       {vehicles.length === 0 ? (
         <div className="glass-panel" style={styles.warningCard}>
@@ -653,6 +677,35 @@ const PublishRide = () => {
 const styles = {
   container: {
     paddingTop: '20px',
+  },
+  tipBox: {
+    padding: '1.25rem',
+    marginBottom: '2rem',
+    border: '1px solid rgba(255, 140, 0, 0.15)',
+    background: 'rgba(255, 140, 0, 0.03)',
+    borderRadius: 'var(--radius-md)',
+  },
+  tipHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '0.4rem',
+  },
+  tipTitle: {
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+    fontSize: '0.95rem',
+  },
+  tipText: {
+    fontSize: '0.85rem',
+    color: 'var(--text-secondary)',
+    lineHeight: '1.5',
+    margin: 0,
+  },
+  tipLink: {
+    color: 'var(--accent-primary)',
+    fontWeight: 600,
+    textDecoration: 'underline',
   },
   heroSection: {
     marginBottom: '2rem',
