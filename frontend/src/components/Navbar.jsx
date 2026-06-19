@@ -85,7 +85,7 @@ const Navbar = () => {
             </button>
 
             {showNotifDropdown && (
-              <div style={styles.dropdown} className="glass-panel animate-slide">
+              <div style={styles.dropdown} className="animate-slide">
                 <div style={styles.dropdownHeader}>
                   <h4>Notifications</h4>
                   {unreadCount > 0 && (
@@ -295,6 +295,10 @@ const styles = {
     flexDirection: 'column',
     padding: '1rem',
     zIndex: 1001,
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--border-color)',
+    borderRadius: 'var(--radius-md)',
+    boxShadow: 'var(--glass-shadow)',
   },
   dropdownHeader: {
     display: 'flex',

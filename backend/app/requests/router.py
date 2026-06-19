@@ -11,6 +11,12 @@ from app.requests.schemas import RideRequestCreate, RideRequestUpdate, RideReque
 from app.auth.dependencies import get_current_user
 from app.notifications.service import create_notification
 
+def shorten_address(address: str) -> str:
+    if not address:
+        return ""
+    parts = [p.strip() for p in address.split(",") if p.strip()]
+    return ", ".join(parts[:2]) if len(parts) >= 2 else address
+
 router = APIRouter(prefix="/requests", tags=["requests"])
 
 @router.post("", response_model=RideRequestResponse, status_code=status.HTTP_201_CREATED)
@@ -65,9 +71,9 @@ def request_ride(
     
     # Notify Driver
     if payload.pickup_location and payload.dropoff_location:
-        notif_msg = f"{current_user.name} has requested to join your ride from {payload.pickup_location} to {payload.dropoff_location}."
+        notif_msg = f"{current_user.name} has requested to join your ride from {shorten_address(payload.pickup_location)} to {shorten_address(payload.dropoff_location)}."
     else:
-        notif_msg = f"{current_user.name} has requested to join your ride from {ride.source} to {ride.destination}."
+        notif_msg = f"{current_user.name} has requested to join your ride from {shorten_address(ride.source)} to {shorten_address(ride.destination)}."
 
     create_notification(
         db=db,
@@ -137,7 +143,7 @@ def update_request_status(
                 db=db,
                 user_id=passenger.id,
                 title="Request Accepted!",
-                message=f"Your request for the ride from {ride.source} to {ride.destination} was accepted.",
+                message=f"Your request for the ride from {shorten_address(ride.source)} to {shorten_address(ride.destination)} was accepted.",
                 ride_id=ride.id,
                 commit=False
             )
@@ -158,7 +164,7 @@ def update_request_status(
                 db=db,
                 user_id=passenger.id,
                 title="Request Rejected",
-                message=f"Your request for the ride from {ride.source} to {ride.destination} was rejected.",
+                message=f"Your request for the ride from {shorten_address(ride.source)} to {shorten_address(ride.destination)} was rejected.",
                 ride_id=ride.id,
                 commit=False
             )
@@ -199,7 +205,7 @@ def update_request_status(
             db=db,
             user_id=ride.owner_id,
             title="Request Cancelled",
-            message=f"{current_user.name} has cancelled their request/seat for the ride to {ride.destination}.",
+            message=f"{current_user.name} has cancelled their request/seat for the ride to {shorten_address(ride.destination)}.",
             ride_id=ride.id,
             commit=False
         )

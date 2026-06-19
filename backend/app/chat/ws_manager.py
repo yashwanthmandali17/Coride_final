@@ -49,6 +49,7 @@ class ConnectionManager:
     async def broadcast_to_ride(self, ride_id: str, sender_id: str, message_data: dict, db):
         """Broadcast a message to all active participants of a ride (excluding the sender)."""
         from app.requests.models import RideParticipant
+        from app.notifications.service import create_notification
         
         # Get all participants in this ride
         participants = db.query(RideParticipant).filter(RideParticipant.ride_id == ride_id).all()
@@ -60,6 +61,22 @@ class ConnectionManager:
         
         for participant in participants:
             if participant.user_id != sender_id:
+                # 1. Send real-time chat WS payload if they are currently inside the chat room
                 await self.send_personal_message(payload, participant.user_id)
+                
+                # 2. Save a database notification so they get a notification count and bell icon alert
+                sender_name = message_data.get("sender_name", "A ride member")
+                content_preview = message_data.get("content", "")
+                if len(content_preview) > 50:
+                    content_preview = content_preview[:47] + "..."
+                    
+                create_notification(
+                    db=db,
+                    user_id=participant.user_id,
+                    title=f"New message from {sender_name}",
+                    message=content_preview,
+                    ride_id=ride_id,
+                    commit=True
+                )
 
 ws_manager = ConnectionManager()
