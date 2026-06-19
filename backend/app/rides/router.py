@@ -181,8 +181,21 @@ def get_my_rides(
     db: Session = Depends(get_db)
 ):
     """
-    Get all rides published by the current user.
+    Get all rides published by the current user. Automatically marks past published rides as abandoned.
     """
+    now = datetime.now(timezone.utc)
+    # Find any of current_user's rides that are "published" but their departure_time is in the past
+    past_rides = db.query(Ride).filter(
+        Ride.owner_id == current_user.id,
+        Ride.status == "published",
+        Ride.departure_time < now
+    ).all()
+    
+    if past_rides:
+        for r in past_rides:
+            r.status = "abandoned"
+        db.commit()
+
     return db.query(Ride).filter(Ride.owner_id == current_user.id).order_by(Ride.departure_time.desc()).all()
 
 @router.get("/{ride_id}", response_model=RideDetailedResponse)

@@ -20,7 +20,7 @@ const RideHistory = () => {
         // Fetch all user's requests/bookings
         const bookings = await rideAPI.getMyRequests();
         const passengerHistory = bookings
-          .filter(b => b.status === 'accepted' && (b.ride.status === 'completed' || b.ride.status === 'cancelled'))
+          .filter(b => b.status === 'accepted' && (b.ride.status === 'completed' || b.ride.status === 'cancelled' || b.ride.status === 'abandoned'))
           .map(b => ({
             id: b.id,
             rideId: b.ride.id,
@@ -33,10 +33,10 @@ const RideHistory = () => {
             partnerName: b.ride.owner.name
           }));
 
-        // Fetch driver history (user's published rides that are completed/cancelled)
+        // Fetch driver history (user's published rides that are completed/cancelled/abandoned)
         const allRides = await rideAPI.getMyRides();
         const driverHistory = allRides
-          .filter(r => r.owner_id === user.id && (r.status === 'completed' || r.status === 'cancelled'))
+          .filter(r => r.owner_id === user.id && (r.status === 'completed' || r.status === 'cancelled' || r.status === 'abandoned'))
           .map(r => ({
             id: r.id,
             rideId: r.id,

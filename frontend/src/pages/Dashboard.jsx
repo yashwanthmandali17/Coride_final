@@ -30,13 +30,26 @@ const Dashboard = () => {
         rideAPI.getVehicles()
       ]);
 
-      setPublishedRides(myPublished);
-      setBookings(myBookings);
+      // Only display active published rides (status 'published' or 'started')
+      const activePublished = myPublished.filter(
+        (ride) => ride.status === 'published' || ride.status === 'started'
+      );
+      setPublishedRides(activePublished);
+
+      // Only display active bookings (ride is not completed/cancelled/abandoned, booking is not cancelled/rejected)
+      const activeBookings = myBookings.filter(
+        (b) => b.status !== 'cancelled' && b.status !== 'rejected' && 
+               b.ride.status !== 'completed' && b.ride.status !== 'cancelled' && b.ride.status !== 'abandoned'
+      );
+      setBookings(activeBookings);
       setVehicles(myVehicles);
       
       // Only display incoming requests that are pending and for active rides
       const activePending = incoming.filter(
-        (req) => req.status === 'pending' && req.ride.status !== 'completed' && req.ride.status !== 'cancelled'
+        (req) => req.status === 'pending' && 
+                 req.ride.status !== 'completed' && 
+                 req.ride.status !== 'cancelled' && 
+                 req.ride.status !== 'abandoned'
       );
       setIncomingRequests(activePending);
       setLoading(false);

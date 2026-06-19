@@ -219,6 +219,18 @@ def get_my_requests(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    now = datetime.now(timezone.utc)
+    # Find any requests where the ride is "published" but past departure time
+    past_requests = db.query(RideRequest).join(Ride).filter(
+        RideRequest.passenger_id == current_user.id,
+        Ride.status == "published",
+        Ride.departure_time < now
+    ).all()
+    if past_requests:
+        for req in past_requests:
+            req.ride.status = "abandoned"
+        db.commit()
+
     return db.query(RideRequest).filter(RideRequest.passenger_id == current_user.id).all()
 
 @router.get("/incoming", response_model=List[RideRequestResponse])
@@ -226,6 +238,18 @@ def get_incoming_requests(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    now = datetime.now(timezone.utc)
+    # Find any incoming requests where the ride is "published" but past departure time
+    past_incoming = db.query(RideRequest).join(Ride).filter(
+        Ride.owner_id == current_user.id,
+        Ride.status == "published",
+        Ride.departure_time < now
+    ).all()
+    if past_incoming:
+        for req in past_incoming:
+            req.ride.status = "abandoned"
+        db.commit()
+
     return db.query(RideRequest).join(Ride).filter(Ride.owner_id == current_user.id).all()
 
 @router.get("/rides/{ride_id}/participants", response_model=List[RideParticipantResponse])
