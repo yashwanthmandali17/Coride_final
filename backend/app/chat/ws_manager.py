@@ -49,20 +49,30 @@ class ConnectionManager:
     async def broadcast_to_ride(self, ride_id: str, sender_id: str, message_data: dict, db):
         """Broadcast a message to all active participants of a ride (excluding the sender)."""
         from app.requests.models import RideParticipant
+        from app.rides.models import Ride
         from app.notifications.service import create_notification
         
+        # Get the ride to ensure we have the owner/driver
+        ride = db.query(Ride).filter(Ride.id == ride_id).first()
+        if not ride:
+            return
+            
         # Get all participants in this ride
         participants = db.query(RideParticipant).filter(RideParticipant.ride_id == ride_id).all()
+        
+        # Collect unique user IDs for the ride (always include driver/owner)
+        user_ids = {p.user_id for p in participants}
+        user_ids.add(ride.owner_id)
         
         payload = {
             "type": "chat",
             "data": message_data
         }
         
-        for participant in participants:
-            if participant.user_id != sender_id:
+        for user_id in user_ids:
+            if user_id != sender_id:
                 # 1. Send real-time chat WS payload if they are currently inside the chat room
-                await self.send_personal_message(payload, participant.user_id)
+                await self.send_personal_message(payload, user_id)
                 
                 # 2. Save a database notification so they get a notification count and bell icon alert
                 sender_name = message_data.get("sender_name", "A ride member")
@@ -72,7 +82,7 @@ class ConnectionManager:
                     
                 create_notification(
                     db=db,
-                    user_id=participant.user_id,
+                    user_id=user_id,
                     title=f"New message from {sender_name}",
                     message=content_preview,
                     ride_id=ride_id,

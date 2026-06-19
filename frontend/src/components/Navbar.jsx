@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -10,6 +10,22 @@ const Navbar = () => {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('coride_theme') || 'dark');
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifDropdown(false);
+      }
+    };
+
+    if (showNotifDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifDropdown]);
 
   useEffect(() => {
     if (theme === 'light') {
@@ -74,7 +90,7 @@ const Navbar = () => {
         {/* Action Controls */}
         <div style={styles.navActions}>
           {/* Notification Bell */}
-          <div style={styles.notifContainer}>
+          <div style={styles.notifContainer} ref={notifRef}>
             <button
               onClick={() => setShowNotifDropdown(!showNotifDropdown)}
               style={styles.actionBtn}
