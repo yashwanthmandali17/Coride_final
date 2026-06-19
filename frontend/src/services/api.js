@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 // FastAPI Server Base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+let baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+if (baseUrl && !baseUrl.endsWith('/api') && !baseUrl.endsWith('/api/')) {
+  baseUrl = baseUrl.replace(/\/$/, '') + '/api';
+}
+const API_BASE_URL = baseUrl;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
