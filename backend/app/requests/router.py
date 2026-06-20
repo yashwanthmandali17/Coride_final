@@ -170,9 +170,12 @@ def update_request_status(
             )
             
     elif payload.status == "cancelled":
-        # Only passenger can cancel their request
-        if request_obj.passenger_id != current_user.id:
-            raise HTTPException(status_code=403, detail="You can only cancel your own requests.")
+        # Can be cancelled by passenger or by the driver (ride owner)
+        is_passenger = request_obj.passenger_id == current_user.id
+        is_driver = ride.owner_id == current_user.id
+        
+        if not (is_passenger or is_driver):
+            raise HTTPException(status_code=403, detail="You cannot cancel this request.")
             
         if request_obj.status == "cancelled":
             raise HTTPException(status_code=400, detail="Request is already cancelled.")
@@ -184,10 +187,10 @@ def update_request_status(
             # Reclaim seat
             ride.seats_available += 1
             
-            # Remove from participants
+            # Remove passenger from participants
             participant = db.query(RideParticipant).filter(
                 RideParticipant.ride_id == ride.id,
-                RideParticipant.user_id == current_user.id
+                RideParticipant.user_id == request_obj.passenger_id
             ).first()
             if participant:
                 db.delete(participant)
@@ -196,19 +199,32 @@ def update_request_status(
         audit_log = RideHistory(
             ride_id=ride.id,
             user_id=current_user.id,
-            action="Request Cancelled"
+            action="Request Cancelled" if is_passenger else "Passenger Removed"
         )
         db.add(audit_log)
         
-        # Notify Driver
-        create_notification(
-            db=db,
-            user_id=ride.owner_id,
-            title="Request Cancelled",
-            message=f"{current_user.name} has cancelled their request/seat for the ride to {shorten_address(ride.destination)}.",
-            ride_id=ride.id,
-            commit=False
-        )
+        # Notify appropriate party
+        if is_passenger:
+            # Notify Driver
+            create_notification(
+                db=db,
+                user_id=ride.owner_id,
+                title="Request Cancelled",
+                message=f"{current_user.name} has cancelled their request/seat for the ride to {shorten_address(ride.destination)}.",
+                ride_id=ride.id,
+                commit=False
+            )
+        else:
+            # Driver cancelled passenger's request. Notify Passenger.
+            reason_str = f" Reason: {payload.cancellation_reason}" if payload.cancellation_reason else ""
+            create_notification(
+                db=db,
+                user_id=request_obj.passenger_id,
+                title="Booking Cancelled by Driver",
+                message=f"The driver has cancelled your booking for the ride from {shorten_address(ride.source)} to {shorten_address(ride.destination)}.{reason_str}",
+                ride_id=ride.id,
+                commit=False
+            )
         
     db.commit()
     db.refresh(request_obj)
@@ -270,7 +286,21 @@ def get_ride_participants(
             detail="You must be a participant (driver or passenger) to view other participants."
         )
         
-    return db.query(RideParticipant).filter(RideParticipant.ride_id == ride_id).all()
+    participants = db.query(RideParticipant).filter(RideParticipant.ride_id == ride_id).all()
+    for p in participants:
+        if p.role == "passenger":
+            req = db.query(RideRequest).filter(
+                RideRequest.ride_id == ride_id,
+                RideRequest.passenger_id == p.user_id,
+                RideRequest.status == "accepted"
+            ).first()
+            if req:
+                p.request_id = req.id
+            else:
+                p.request_id = None
+        else:
+            p.request_id = None
+    return participants
 
 @router.post("/rides/{ride_id}/complete")
 def confirm_ride_completion(

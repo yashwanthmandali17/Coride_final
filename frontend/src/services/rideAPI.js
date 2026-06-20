@@ -44,8 +44,8 @@ const rideAPI = {
     return response.data;
   },
 
-  updateRideStatus: async (rideId, status) => {
-    const response = await api.put(`/rides/${rideId}`, { status });
+  updateRideStatus: async (rideId, status, cancellationReason = null) => {
+    const response = await api.put(`/rides/${rideId}`, { status, cancellation_reason: cancellationReason });
     return response.data;
   },
 
@@ -55,9 +55,9 @@ const rideAPI = {
     return response.data;
   },
 
-  updateRequestStatus: async (requestId, status) => {
+  updateRequestStatus: async (requestId, status, cancellationReason = null) => {
     // status = 'accepted' | 'rejected' | 'cancelled'
-    const response = await api.put(`/requests/${requestId}`, { status });
+    const response = await api.put(`/requests/${requestId}`, { status, cancellation_reason: cancellationReason });
     return response.data;
   },
 

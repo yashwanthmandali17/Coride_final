@@ -30,6 +30,7 @@ class RideUpdate(BaseModel):
     seats_available: Optional[int] = Field(None, ge=0)
     status: Optional[str] = None # "published", "started", "completed", "cancelled"
     final_cost: Optional[float] = Field(None, ge=0.00)
+    cancellation_reason: Optional[str] = None
 
 class RideResponse(RideBase):
     id: str

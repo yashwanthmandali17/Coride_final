@@ -11,6 +11,7 @@ class RideRequestCreate(BaseModel):
 
 class RideRequestUpdate(BaseModel):
     status: str # "accepted", "rejected", "cancelled"
+    cancellation_reason: Optional[str] = None
 
 class RideRequestResponse(BaseModel):
     id: str
@@ -42,6 +43,7 @@ class RideParticipantResponse(BaseModel):
     dropoff_location: Optional[str] = None
     joined_at: datetime
     user: UserResponse
+    request_id: Optional[str] = None
 
     @field_validator('joined_at', mode='after')
     @classmethod

@@ -20,6 +20,9 @@ const RideDetails = () => {
   const [participants, setParticipants] = useState([]);
   const [myRequest, setMyRequest] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showCancelPassengerModal, setShowCancelPassengerModal] = useState(false);
+  const [selectedParticipantToCancel, setSelectedParticipantToCancel] = useState(null);
+  const [cancellationReason, setCancellationReason] = useState('');
   const [history, setHistory] = useState([]);
   
   const [loading, setLoading] = useState(true);
@@ -114,6 +117,7 @@ const RideDetails = () => {
   };
 
   const handleCancelRide = () => {
+    setCancellationReason('');
     setShowCancelModal(true);
   };
 
@@ -121,12 +125,31 @@ const RideDetails = () => {
     setShowCancelModal(false);
     try {
       setLoading(true);
-      await rideAPI.updateRideStatus(rideId, 'cancelled');
+      await rideAPI.updateRideStatus(rideId, 'cancelled', cancellationReason);
       addToast('Ride Cancelled', 'The ride has been cancelled.', 'info');
       await loadRideDetails();
     } catch (err) {
       addToast('Error', err.response?.data?.detail || 'Failed to cancel ride.', 'error');
       setLoading(false);
+    } finally {
+      setCancellationReason('');
+    }
+  };
+
+  const confirmCancelPassenger = async () => {
+    if (!selectedParticipantToCancel) return;
+    setShowCancelPassengerModal(false);
+    try {
+      setLoading(true);
+      await rideAPI.updateRequestStatus(selectedParticipantToCancel.request_id, 'cancelled', cancellationReason);
+      addToast('Passenger Removed', `Successfully removed ${selectedParticipantToCancel.user.name} from the ride.`, 'success');
+      await loadRideDetails();
+    } catch (err) {
+      addToast('Error', err.response?.data?.detail || 'Failed to remove passenger.', 'error');
+      setLoading(false);
+    } finally {
+      setSelectedParticipantToCancel(null);
+      setCancellationReason('');
     }
   };
 
@@ -194,15 +217,92 @@ const RideDetails = () => {
   return (
     <div style={styles.container} className="animate-fade">
       
-      <ConfirmModal
-        isOpen={showCancelModal}
-        title="Cancel Ride"
-        message="Are you sure you want to cancel this ride? If passengers are already booked, this will lower your Reliability Score."
-        confirmText="Yes, Cancel Ride"
-        type="danger"
-        onConfirm={confirmCancelRide}
-        onCancel={() => setShowCancelModal(false)}
-      />
+      {/* Cancel Ride Modal */}
+      {showCancelModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent} className="glass-panel animate-slide">
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>Cancel Ride</h3>
+            </div>
+            <p style={styles.modalMessage}>
+              Are you sure you want to cancel this ride? If passengers are already booked, this will lower your Reliability Score.
+            </p>
+            <div className="form-group" style={{ width: '100%' }}>
+              <label className="form-label">Provide Cancellation Reason:</label>
+              <textarea
+                className="form-input"
+                placeholder="Why are you cancelling this ride?"
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                style={{ height: '80px', resize: 'none' }}
+                required
+              />
+            </div>
+            <div style={styles.modalActions}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancellationReason('');
+                }}
+              >
+                Go Back
+              </button>
+              <button 
+                className="btn btn-danger" 
+                onClick={confirmCancelRide}
+                disabled={!cancellationReason.trim()}
+              >
+                Yes, Cancel Ride
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Passenger Modal */}
+      {showCancelPassengerModal && selectedParticipantToCancel && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent} className="glass-panel animate-slide">
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>Remove Passenger</h3>
+            </div>
+            <p style={styles.modalMessage}>
+              Are you sure you want to remove <strong>{selectedParticipantToCancel.user.name}</strong> from this ride?
+            </p>
+            <div className="form-group" style={{ width: '100%' }}>
+              <label className="form-label">Provide Cancellation Reason:</label>
+              <textarea
+                className="form-input"
+                placeholder="Why are you removing this passenger?"
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                style={{ height: '80px', resize: 'none' }}
+                required
+              />
+            </div>
+            <div style={styles.modalActions}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setShowCancelPassengerModal(false);
+                  setSelectedParticipantToCancel(null);
+                  setCancellationReason('');
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-danger" 
+                onClick={confirmCancelPassenger}
+                disabled={!cancellationReason.trim()}
+              >
+                Remove Passenger
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header details */}
       <div style={styles.header}>
@@ -521,6 +621,19 @@ const RideDetails = () => {
                           className="btn"
                         >
                           Rate
+                        </button>
+                      )}
+                      {ride.owner_id === user.id && (ride.status === 'published' || ride.status === 'started') && p.request_id && (
+                        <button
+                          onClick={() => {
+                            setSelectedParticipantToCancel(p);
+                            setCancellationReason('');
+                            setShowCancelPassengerModal(true);
+                          }}
+                          style={styles.removePassengerBtn}
+                          className="btn"
+                        >
+                          Remove
                         </button>
                       )}
                     </div>
@@ -919,6 +1032,66 @@ const styles = {
     borderTopColor: 'var(--accent-primary)',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backdropFilter: 'blur(8px)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+    animation: 'fadeIn 0.2s ease-out',
+  },
+  modalContent: {
+    width: '90%',
+    maxWidth: '400px',
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--border-color)',
+    borderRadius: 'var(--radius-lg)',
+    padding: '1.5rem',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+    animation: 'slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+  modalHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+  },
+  modalTitle: {
+    fontSize: '1.25rem',
+    fontWeight: 600,
+    color: 'var(--text-primary)',
+    margin: 0,
+  },
+  modalMessage: {
+    color: 'var(--text-secondary)',
+    fontSize: '0.95rem',
+    lineHeight: 1.5,
+    margin: 0,
+  },
+  modalActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '1rem',
+    marginTop: '0.5rem',
+  },
+  removePassengerBtn: {
+    padding: '0.3rem 0.6rem',
+    fontSize: '0.75rem',
+    backgroundColor: 'rgba(255, 23, 68, 0.1)',
+    color: 'var(--danger)',
+    border: '1px solid rgba(255, 23, 68, 0.2)',
+    borderRadius: 'var(--radius-sm)',
+    cursor: 'pointer',
+    transition: 'all var(--transition-fast)',
   },
 };
 

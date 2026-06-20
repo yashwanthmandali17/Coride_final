@@ -37,6 +37,12 @@ def get_route_h3_indexes(s_lat: float, s_lng: float, d_lat: float, d_lng: float,
         h3.latlng_to_cell(d_lat, d_lng, resolution)
     ]
 
+def shorten_address(address: str) -> str:
+    if not address:
+        return ""
+    parts = [p.strip() for p in address.split(",") if p.strip()]
+    return ", ".join(parts[:2]) if len(parts) >= 2 else address
+
 router = APIRouter(prefix="/rides", tags=["rides"])
 
 def calculate_auto_cost(s_lat: float, s_lng: float, d_lat: float, d_lng: float, vehicle_type: str, capacity: int) -> float:
@@ -252,15 +258,29 @@ def update_ride_details(
         )
         db.add(audit_log)
         
-        # Penalty calculation for cancelling rides
+        # Penalty calculation and notifications for cancelling rides
         if payload.status == "cancelled" and old_status in ["published", "started"]:
             # Check if there were any passengers with accepted requests
-            passenger_count = db.query(RideParticipant).filter(
+            passengers = db.query(RideParticipant).filter(
                 RideParticipant.ride_id == ride.id,
                 RideParticipant.role == "passenger"
-            ).count()
+            ).all()
             
+            passenger_count = len(passengers)
             if passenger_count > 0:
+                # Notify all passengers
+                from app.notifications.service import create_notification
+                reason_str = f" Reason: {payload.cancellation_reason}" if payload.cancellation_reason else ""
+                for p in passengers:
+                    create_notification(
+                        db=db,
+                        user_id=p.user_id,
+                        title="Ride Cancelled by Driver",
+                        message=f"The ride from {shorten_address(ride.source)} to {shorten_address(ride.destination)} has been cancelled by the driver.{reason_str}",
+                        ride_id=ride.id,
+                        commit=False
+                    )
+                
                 # Driver penalized: update reliability score
                 # Reliability = Completed / (Completed + Cancelled) * 100
                 # Let's count driver's past rides
