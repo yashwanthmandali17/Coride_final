@@ -345,7 +345,7 @@ const PublishRide = () => {
           </p>
         </div>
       ) : (
-        <div style={styles.mainGrid}>
+        <div style={styles.mainGrid} className="publish-main-grid">
           {/* Left Column: Form details */}
           <div className="glass-panel" style={styles.formPanel}>
             <form onSubmit={handleSubmit}>
@@ -831,8 +831,8 @@ const styles = {
 if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = `
-    @media (max-width: 1024px) {
-      div[style*="mainGrid"] { grid-template-columns: 1fr !important; }
+    @media (max-width: 900px) {
+      .publish-main-grid { grid-template-columns: 1fr !important; }
     }
   `;
   document.head.appendChild(styleSheet);

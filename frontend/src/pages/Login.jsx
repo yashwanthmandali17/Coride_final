@@ -189,7 +189,7 @@ const Login = () => {
   if (isLoginOpen) {
     return (
       <div style={{ ...styles.splitWrapper, backgroundColor: getStatusBgColor(), transition: 'background-color 0.5s ease' }} className="animate-fade">
-        <div style={styles.splitFormSide}>
+        <div style={styles.splitFormSide} className="split-form-side">
           <div style={styles.splitHeader}>
             <button onClick={() => { setError(''); setIsLoginOpen(false); }} style={styles.splitBackBtn}>
               <ArrowLeft size={16} /> Back to Home
@@ -278,7 +278,7 @@ const Login = () => {
   if (isRegisterOpen) {
     return (
       <div style={{ ...styles.splitWrapper, backgroundColor: getStatusBgColor(), transition: 'background-color 0.5s ease' }} className="animate-fade">
-        <div style={styles.splitFormSide}>
+        <div style={styles.splitFormSide} className="split-form-side">
           <div style={styles.splitHeader}>
             <button onClick={() => { setError(''); setIsRegisterOpen(false); }} style={styles.splitBackBtn}>
               <ArrowLeft size={16} /> Back to Home
@@ -403,7 +403,7 @@ const Login = () => {
 
       {/* Hero Section */}
       <section style={styles.heroSection} className="grid-mesh">
-        <div style={styles.heroContainer}>
+        <div style={styles.heroContainer} className="hero-container">
           <div style={styles.heroContent}>
             <div style={styles.badgePromo}>🚀 SMART COMMUNITY RIDE SHARING</div>
             <h1 style={styles.heroTitle}>
@@ -451,7 +451,7 @@ const Login = () => {
           <p style={styles.sectionSubtitle}>Discover key features tailored for modern ride-sharing operations.</p>
         </div>
 
-        <div style={styles.flashcardsGrid}>
+        <div style={styles.flashcardsGrid} className="flashcards-grid">
           {/* Card 1 */}
           <div className="glass-panel glass-panel-hover" style={styles.flashcard}>
             <div style={{ ...styles.cardIconBox, backgroundColor: 'rgba(255, 140, 0, 0.1)', color: 'var(--accent-secondary)' }}>
@@ -528,7 +528,7 @@ const Login = () => {
 
       {/* How it works details */}
       <section style={styles.detailsSection} className="scroll-reveal">
-        <div style={styles.detailsContainer}>
+        <div style={styles.detailsContainer} className="details-container">
           <div style={styles.detailsImageSide}>
             <div style={styles.infoCardOutline}>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -1251,15 +1251,15 @@ if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = `
     @media (max-width: 900px) {
-      div[style*="splitVisualSide"] { display: none !important; }
-      div[style*="splitFormSide"] { width: 100% !important; flex: none !important; }
-      div[style*="heroContainer"] { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
-      div[style*="heroVisual"] { display: none !important; }
-      div[style*="flashcardsGrid"] { grid-template-columns: repeat(2, 1fr) !important; }
-      div[style*="detailsContainer"] { grid-template-columns: 1fr !important; gap: 3rem !important; }
+      .split-visual-side { display: none !important; }
+      .split-form-side { width: 100% !important; flex: none !important; }
+      .hero-container { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
+      .hero-visual { display: none !important; }
+      .flashcards-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .details-container { grid-template-columns: 1fr !important; gap: 3rem !important; }
     }
     @media (max-width: 600px) {
-      div[style*="flashcardsGrid"] { grid-template-columns: 1fr !important; }
+      .flashcards-grid { grid-template-columns: 1fr !important; }
     }
   `;
   document.head.appendChild(styleSheet);

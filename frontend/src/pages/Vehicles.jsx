@@ -228,7 +228,7 @@ const Vehicles = () => {
         </p>
       </div>
 
-      <div style={styles.grid}>
+      <div style={styles.grid} className="vehicles-grid">
         {/* Left Column: Vehicles List */}
         <div style={styles.leftCol}>
           <div className="glass-panel" style={styles.panel}>
@@ -406,7 +406,7 @@ const Vehicles = () => {
             )}
 
             <form onSubmit={handleAddVehicle}>
-              <div style={styles.formGrid}>
+              <div style={styles.formGrid} className="vehicles-form-grid">
                 {/* Vehicle Type */}
                 <div className="form-group">
                   <label className="form-label">Vehicle Type</label>
@@ -788,13 +788,12 @@ const styles = {
   },
 };
 
-// Add responsive layout styles dynamically
 if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = `
     @media (max-width: 900px) {
-      div[style*="grid"] { grid-template-columns: 1fr !important; }
-      div[style*="formGrid"] { grid-template-columns: 1fr !important; }
+      .vehicles-grid { grid-template-columns: 1fr !important; }
+      .vehicles-form-grid { grid-template-columns: 1fr !important; }
     }
   `;
   document.head.appendChild(styleSheet);

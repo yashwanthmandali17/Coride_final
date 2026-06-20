@@ -205,7 +205,7 @@ const SearchRide = () => {
         </p>
       </div>
 
-      <div style={styles.mainGrid}>
+      <div style={styles.mainGrid} className="search-main-grid">
         {/* Left Column: Search Form and Results */}
         <div style={styles.leftCol}>
           <div className="glass-panel" style={styles.searchFormPanel}>
@@ -580,8 +580,8 @@ if (typeof window !== 'undefined') {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    @media (max-width: 1024px) {
-      div[style*="mainGrid"] { grid-template-columns: 1fr !important; }
+    @media (max-width: 900px) {
+      .search-main-grid { grid-template-columns: 1fr !important; }
     }
   `;
   document.head.appendChild(styleSheet);

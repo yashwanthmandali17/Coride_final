@@ -305,7 +305,7 @@ const RideDetails = () => {
       )}
 
       {/* Header details */}
-      <div style={styles.header}>
+      <div style={styles.header} className="rdetails-header">
         <div>
           <span className={`badge badge-${ride.status}`} style={{ marginBottom: '0.5rem' }}>
             Ride Status: {ride.status}
@@ -318,7 +318,7 @@ const RideDetails = () => {
         </div>
         
         {/* Cost display */}
-        <div style={styles.costBox}>
+        <div style={styles.costBox} className="rdetails-costbox">
           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Price / Seat</span>
           <div style={styles.costAmount}>
             <IndianRupee size={20} color="var(--success)" />
@@ -328,7 +328,7 @@ const RideDetails = () => {
       </div>
 
       {/* Main Grid */}
-      <div style={styles.grid}>
+      <div style={styles.grid} className="rdetails-grid">
         
         {/* Left Side: Map and Info Card */}
         <div style={styles.leftCol}>
@@ -371,7 +371,7 @@ const RideDetails = () => {
               </div>
             </div>
             
-            <div style={styles.detailsGrid}>
+            <div style={styles.detailsGrid} className="rdetails-detailsgrid">
               <div style={styles.detailItem}>
                 <Award size={18} color="var(--accent-primary)" />
                 <div>
@@ -397,7 +397,7 @@ const RideDetails = () => {
               
               {/* IF DRIVER ACTIONS */}
               {isDriver && (
-                <div style={styles.actionRow}>
+                <div style={styles.actionRow} className="rdetails-actionrow">
                   {ride.status === 'published' && (
                     <>
                       {hasPassengers ? (
@@ -441,7 +441,7 @@ const RideDetails = () => {
 
               {/* IF PASSENGER ACTIONS */}
               {!isDriver && (
-                <div style={styles.actionRow}>
+                <div style={styles.actionRow} className="rdetails-actionrow">
                   {/* Case 1: No request yet */}
                   {!myRequest && ride.status === 'published' && (
                     <div style={{ width: '100%' }}>
@@ -497,7 +497,7 @@ const RideDetails = () => {
                       <div style={styles.statusBox}>
                         <span className="badge badge-accepted">Booking Confirmed</span>
                       </div>
-                      <div style={styles.actionRow}>
+                      <div style={styles.actionRow} className="rdetails-actionrow">
                         {ride.status === 'published' && (
                           <>
                             <Link to={`/chat/${ride.id}`} className="btn btn-primary" style={{ flex: 1 }}>
@@ -1095,16 +1095,15 @@ const styles = {
   },
 };
 
-// Add responsive stylesheet overrides
 if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = `
     @media (max-width: 900px) {
-      div[style*="header"] { flex-direction: column !important; gap: 1rem !important; align-items: flex-start !important; }
-      div[style*="costBox"] { align-items: flex-start !important; width: 100% !important; }
-      div[style*="grid"] { grid-template-columns: 1fr !important; }
-      div[style*="detailsGrid"] { grid-template-columns: 1fr !important; }
-      div[style*="actionRow"] { flex-direction: column !important; }
+      .rdetails-header { flex-direction: column !important; gap: 1rem !important; align-items: flex-start !important; }
+      .rdetails-costbox { align-items: flex-start !important; width: 100% !important; }
+      .rdetails-grid { grid-template-columns: 1fr !important; }
+      .rdetails-detailsgrid { grid-template-columns: 1fr !important; }
+      .rdetails-actionrow { flex-direction: column !important; }
     }
   `;
   document.head.appendChild(styleSheet);

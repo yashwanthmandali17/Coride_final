@@ -122,12 +122,12 @@ const Dashboard = () => {
   return (
     <div style={styles.container} className="animate-fade">
       {/* Stats Widgets Header */}
-      <div style={styles.statsHeader} className="glass-panel">
+      <div style={styles.statsHeader} className="glass-panel stats-header">
         <div style={styles.welcomeBox}>
           <h2 style={{ background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>Dashboard</h2>
           <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Welcome back, {user.name}!</p>
         </div>
-        <div style={styles.statsGrid}>
+        <div style={styles.statsGrid} className="stats-grid">
           <div 
             className="tooltip-container"
             style={{...styles.statCard, padding: '1rem', borderRadius: 'var(--radius-md)', background: 'var(--card-inner-bg)', border: '1px solid var(--card-inner-border)', minWidth: '160px', alignItems: 'flex-start'}}
@@ -226,7 +226,7 @@ const Dashboard = () => {
       )}
 
       {/* Grid Layout */}
-      <div style={styles.dashboardGrid}>
+      <div style={styles.dashboardGrid} className="dashboard-grid">
         
         {/* Left/Main Column: Active Rides & Bookings */}
         <div style={styles.mainCol}>
@@ -311,7 +311,7 @@ const Dashboard = () => {
                     <div style={styles.rideListInfo}>
                       <div style={styles.rideListRoute}>
                         <MapPin size={16} color="var(--accent-secondary)" />
-                        <span style={styles.routeText}>{ride.source} → {ride.destination}</span>
+                        <span style={styles.routeText} className="route-text">{ride.source} → {ride.destination}</span>
                       </div>
                       <div style={styles.rideListMeta}>
                         <span>Date: {new Date(ride.departure_time).toLocaleDateString()}</span>
@@ -677,10 +677,10 @@ if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = `
     @media (max-width: 900px) {
-      div[style*="statsHeader"] { flex-direction: column !important; gap: 1rem !important; align-items: flex-start !important; }
-      div[style*="statsGrid"] { width: 100% !important; justify-content: space-between !important; }
-      div[style*="dashboardGrid"] { grid-template-columns: 1fr !important; }
-      span[style*="routeText"] { max-width: 100% !important; }
+      .stats-header { flex-direction: column !important; gap: 1rem !important; align-items: flex-start !important; }
+      .stats-grid { width: 100% !important; justify-content: space-between !important; flex-wrap: wrap !important; gap: 1rem !important; }
+      .dashboard-grid { grid-template-columns: 1fr !important; }
+      .route-text { max-width: 100% !important; white-space: normal !important; word-break: break-word !important; }
     }
   `;
   document.head.appendChild(styleSheet);

@@ -69,7 +69,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <div style={styles.navLinks}>
+        <div style={styles.navLinks} className="nav-links">
           <Link to="/dashboard" style={isActive('/dashboard') ? styles.activeLink : styles.link}>
             <Calendar size={16} /> Dashboard
           </Link>
@@ -157,7 +157,7 @@ const Navbar = () => {
           </button>
 
           {/* User profile info & Logout */}
-          <div style={styles.userInfo}>
+          <div style={styles.userInfo} className="user-info">
             <span style={styles.userName}>{user.name}</span>
             <button onClick={handleLogout} style={styles.logoutBtn} title="Sign Out">
               <LogOut size={18} />
@@ -165,7 +165,7 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button style={styles.menuBtn} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <button style={styles.menuBtn} className="menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -442,9 +442,9 @@ if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = `
     @media (max-width: 768px) {
-      nav div[style*="navLinks"] { display: none !important; }
-      nav div[style*="userInfo"] { display: none !important; }
-      nav button[style*="menuBtn"] { display: block !important; }
+      .nav-links { display: none !important; }
+      .user-info { display: none !important; }
+      .menu-btn { display: block !important; }
     }
   `;
   document.head.appendChild(styleSheet);

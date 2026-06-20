@@ -83,7 +83,7 @@ const Profile = () => {
         </p>
       </div>
 
-      <div style={styles.grid}>
+      <div style={styles.grid} className="profile-grid">
         
         {/* Left Column: Personal info edit */}
         <div style={styles.leftCol}>
@@ -369,7 +369,7 @@ if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = `
     @media (max-width: 900px) {
-      div[style*="grid"] { grid-template-columns: 1fr !important; }
+      .profile-grid { grid-template-columns: 1fr !important; }
     }
   `;
   document.head.appendChild(styleSheet);

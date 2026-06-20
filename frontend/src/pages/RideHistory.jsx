@@ -137,13 +137,13 @@ const RideHistory = () => {
       ) : (
         <div key={activeTab} style={styles.list} className="animate-fade">
           {filteredItems.map((item) => (
-            <div key={item.id} className="glass-panel animate-slide" style={styles.listItem}>
+            <div key={item.id} className="glass-panel animate-slide history-list-item" style={styles.listItem}>
               <div style={styles.mainInfo}>
                 <div style={styles.route}>
                   <MapPin size={16} color={item.role === 'driver' ? 'var(--accent-primary)' : 'var(--accent-secondary)'} />
                   <strong>{item.source} to {item.destination}</strong>
                 </div>
-                <div style={styles.meta}>
+                <div style={styles.meta} className="history-meta">
                   <div style={styles.metaItem}>
                     <Calendar size={14} />
                     <span>{new Date(item.departureTime).toLocaleDateString()}</span>
@@ -159,11 +159,11 @@ const RideHistory = () => {
                 </div>
               </div>
 
-              <div style={styles.sideInfo}>
+              <div style={styles.sideInfo} className="history-side-info">
                 <span className={`badge badge-${item.status}`} style={{ alignSelf: 'flex-end' }}>
                   {item.status}
                 </span>
-                <Link to={`/rides/${item.rideId}`} className="btn btn-secondary" style={styles.detailsBtn}>
+                <Link to={`/rides/${item.rideId}`} className="btn btn-secondary history-details-btn" style={styles.detailsBtn}>
                   <ExternalLink size={14} /> View Details
                 </Link>
               </div>
@@ -294,10 +294,10 @@ if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = `
     @media (max-width: 768px) {
-      div[style*="listItem"] { flex-direction: column !important; align-items: flex-start !important; gap: 1rem !important; }
-      div[style*="meta"] { flex-direction: column !important; gap: 0.5rem !important; }
-      div[style*="sideInfo"] { width: 100% !important; align-items: flex-start !important; }
-      a[style*="detailsBtn"] { width: 100% !important; text-align: center !important; }
+      .history-list-item { flex-direction: column !important; align-items: flex-start !important; gap: 1rem !important; }
+      .history-meta { flex-direction: column !important; gap: 0.5rem !important; }
+      .history-side-info { width: 100% !important; align-items: flex-start !important; }
+      .history-details-btn { width: 100% !important; text-align: center !important; }
     }
   `;
   document.head.appendChild(styleSheet);
