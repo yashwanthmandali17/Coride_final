@@ -356,21 +356,7 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="regPhoto">Profile Photo URL (Optional)</label>
-                <div style={styles.inputWrapper}>
-                  <User size={18} style={styles.inputIcon} />
-                  <input
-                    id="regPhoto"
-                    type="url"
-                    className="form-input"
-                    placeholder="https://example.com/avatar.jpg"
-                    value={regPhoto}
-                    onChange={(e) => setRegPhoto(e.target.value)}
-                    style={{ paddingLeft: '2.5rem' }}
-                  />
-                </div>
-              </div>
+
 
               <button type="submit" className="btn btn-primary" style={styles.submitBtn} disabled={loading}>
                 <UserPlus size={18} />
