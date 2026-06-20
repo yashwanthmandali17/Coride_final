@@ -123,13 +123,13 @@ const Dashboard = () => {
     <div style={styles.container} className="animate-fade">
       {/* Stats Widgets Header */}
       <div style={styles.statsHeader} className="glass-panel stats-header">
-        <div style={styles.welcomeBox}>
+        <div style={styles.welcomeBox} className="welcome-box">
           <h2 style={{ background: 'var(--accent-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>Dashboard</h2>
           <p style={{ color: 'var(--text-secondary)', fontWeight: 500 }}>Welcome back, {user.name}!</p>
         </div>
         <div style={styles.statsGrid} className="stats-grid">
           <div 
-            className="tooltip-container"
+            className="tooltip-container stat-card"
             style={{...styles.statCard, padding: '1rem', borderRadius: 'var(--radius-md)', background: 'var(--card-inner-bg)', border: '1px solid var(--card-inner-border)', minWidth: '160px', alignItems: 'flex-start'}}
           >
             <span style={styles.statLabel}>Reliability</span>
@@ -144,7 +144,7 @@ const Dashboard = () => {
               Your commitment rating: completing published rides increases it, while cancelling scheduled rides reduces it.
             </span>
           </div>
-          <div style={{...styles.statCard, padding: '1rem', borderRadius: 'var(--radius-md)', background: 'var(--card-inner-bg)', border: '1px solid var(--card-inner-border)', minWidth: '160px', alignItems: 'flex-start'}}>
+          <div className="stat-card" style={{...styles.statCard, padding: '1rem', borderRadius: 'var(--radius-md)', background: 'var(--card-inner-bg)', border: '1px solid var(--card-inner-border)', minWidth: '160px', alignItems: 'flex-start'}}>
             <span style={styles.statLabel}>Avg Rating</span>
             <div style={styles.statValue}>
               <Star size={20} fill="var(--warning)" color="var(--warning)" />
@@ -167,6 +167,7 @@ const Dashboard = () => {
       {docAlerts.map((alert, idx) => (
         <div 
           key={idx} 
+          className="dashboard-alert"
           style={{
             borderLeft: alert.type === 'expired' ? '4px solid var(--danger)' : '4px solid var(--warning)',
             backgroundColor: 'var(--bg-secondary)',
@@ -237,7 +238,7 @@ const Dashboard = () => {
               <div style={styles.incomingList}>
                 {incomingRequests.map((req) => (
                   <div key={req.id} className="glass-panel animate-slide" style={styles.requestCard}>
-                    <div style={styles.reqHeader}>
+                    <div style={styles.reqHeader} className="req-header">
                       <div style={styles.passengerInfo}>
                         {req.passenger.profile_photo ? (
                           <img src={req.passenger.profile_photo} alt={req.passenger.name} style={styles.reqAvatar} />
@@ -254,7 +255,7 @@ const Dashboard = () => {
                           </div>
                         </div>
                       </div>
-                      <div style={styles.reqActions}>
+                      <div style={styles.reqActions} className="req-actions">
                         <button
                           onClick={() => handleRequestAction(req.id, 'accepted')}
                           style={styles.acceptBtn}
@@ -273,7 +274,7 @@ const Dashboard = () => {
                         </button>
                       </div>
                     </div>
-                    <div style={styles.reqRoute}>
+                    <div style={styles.reqRoute} className="req-route">
                       {req.pickup_location && req.dropoff_location ? (
                         <div style={styles.routeLabel}>
                           Passenger Route: <strong style={{ color: 'var(--accent-primary)' }}>{req.pickup_location} → {req.dropoff_location}</strong>
@@ -307,13 +308,13 @@ const Dashboard = () => {
             ) : (
               <div style={styles.ridesList}>
                 {publishedRides.map((ride) => (
-                  <div key={ride.id} className="glass-panel" style={styles.rideListItem}>
+                  <div key={ride.id} className="glass-panel ride-list-item" style={styles.rideListItem}>
                     <div style={styles.rideListInfo}>
                       <div style={styles.rideListRoute}>
                         <MapPin size={16} color="var(--accent-secondary)" />
                         <span style={styles.routeText} className="route-text">{ride.source} → {ride.destination}</span>
                       </div>
-                      <div style={styles.rideListMeta}>
+                      <div style={styles.rideListMeta} className="ride-list-meta">
                         <span>Date: {new Date(ride.departure_time).toLocaleDateString()}</span>
                         <span>•</span>
                         <span>Seats left: {ride.seats_available}</span>
@@ -321,7 +322,7 @@ const Dashboard = () => {
                         <span className={`badge badge-${ride.status}`}>{ride.status}</span>
                       </div>
                     </div>
-                    <div style={styles.rideListActions}>
+                    <div style={styles.rideListActions} className="ride-list-actions">
                       <Link to={`/rides/${ride.id}`} className="btn btn-secondary" style={styles.actionLink}>
                         <ExternalLink size={14} /> Details
                       </Link>
@@ -366,7 +367,7 @@ const Dashboard = () => {
                     <span>Departs: {new Date(booking.ride.departure_time).toLocaleDateString()}</span>
                     <span>Cost: ₹{booking.ride.final_cost}</span>
                   </div>
-                  <div style={styles.bookingFooter}>
+                  <div style={styles.bookingFooter} className="booking-footer">
                     <Link to={`/rides/${booking.ride.id}`} style={styles.bookingLink}>
                       View details
                     </Link>
@@ -677,10 +678,26 @@ if (typeof window !== 'undefined') {
   const styleSheet = document.createElement("style");
   styleSheet.innerText = `
     @media (max-width: 900px) {
-      .stats-header { flex-direction: column !important; gap: 1rem !important; align-items: flex-start !important; }
-      .stats-grid { width: 100% !important; justify-content: space-between !important; flex-wrap: wrap !important; gap: 1rem !important; }
-      .dashboard-grid { grid-template-columns: 1fr !important; }
+      .stats-header { flex-direction: column !important; gap: 1.5rem !important; align-items: flex-start !important; padding: 1.25rem 1.5rem !important; }
+      .stats-grid { width: 100% !important; justify-content: flex-start !important; flex-wrap: wrap !important; gap: 1rem !important; }
+      .stat-card { min-width: 140px !important; flex: 1 1 0% !important; }
+      .dashboard-grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
       .route-text { max-width: 100% !important; white-space: normal !important; word-break: break-word !important; }
+      .ride-list-item { flex-direction: column !important; align-items: flex-start !important; gap: 1rem !important; }
+      .ride-list-actions { width: 100% !important; justify-content: flex-start !important; }
+      .req-header { flex-direction: column !important; align-items: flex-start !important; gap: 1rem !important; }
+      .req-actions { width: 100% !important; justify-content: flex-start !important; }
+      .req-route { flex-direction: column !important; gap: 0.5rem !important; align-items: flex-start !important; }
+      .ride-list-meta { flex-wrap: wrap !important; gap: 0.5rem !important; }
+    }
+    @media (max-width: 600px) {
+      .stats-header { padding: 1rem !important; }
+      .stats-grid { gap: 0.75rem !important; }
+      .stat-card { min-width: 120px !important; }
+      .dashboard-alert { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; padding: 1rem !important; }
+      .dashboard-alert a { width: 100% !important; text-align: center !important; }
+      .booking-footer { flex-direction: column !important; gap: 0.75rem !important; align-items: flex-start !important; }
+      .booking-footer a, .booking-footer button { width: 100% !important; text-align: center !important; }
     }
   `;
   document.head.appendChild(styleSheet);
