@@ -130,6 +130,12 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setIsSuccess(false);
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
     setLoading(true);
     try {
       await login(email, password);
@@ -244,12 +250,7 @@ const Login = () => {
                     className="form-input"
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setPassword(val);
-                      if (val.length > 0 && val.length < 6) setError('Password must be at least 6 characters long.');
-                      else setError('');
-                    }}
+                    onChange={(e) => setPassword(e.target.value)}
                     style={{ paddingLeft: '2.5rem' }}
                     required
                   />
@@ -348,12 +349,7 @@ const Login = () => {
                     className="form-input"
                     placeholder="•••••••• (Min. 6 chars)"
                     value={regPassword}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setRegPassword(val);
-                      if (val.length > 0 && val.length < 6) setError('Password must be at least 6 characters long.');
-                      else setError('');
-                    }}
+                    onChange={(e) => setRegPassword(e.target.value)}
                     style={{ paddingLeft: '2.5rem' }}
                     required
                   />
@@ -549,40 +545,13 @@ const Login = () => {
         <div style={styles.detailsContainer}>
           <div style={styles.detailsImageSide}>
             <div style={styles.infoCardOutline}>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                 <Info size={24} color="var(--accent-primary)" />
-                <h4 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Key CoRide Benefits</h4>
+                <h4>Greener Commutes</h4>
               </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem', textAlign: 'left' }}>
-                <li style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                  <CheckCircle size={18} color="var(--success)" style={{ marginTop: '0.15rem', flexShrink: 0 }} />
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)' }}>Decreased Traffic Congestion</strong>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Fewer single-occupancy vehicles on busy corridors reduces overall road congestion.</span>
-                  </div>
-                </li>
-                <li style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                  <CheckCircle size={18} color="var(--success)" style={{ marginTop: '0.15rem', flexShrink: 0 }} />
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)' }}>Fair Cost Sharing</strong>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Automated mileage and distance calculations split travel costs accurately among riders.</span>
-                  </div>
-                </li>
-                <li style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                  <CheckCircle size={18} color="var(--success)" style={{ marginTop: '0.15rem', flexShrink: 0 }} />
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)' }}>Decreased Fuel Costs</strong>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Splitting fuel expenses significantly lowers daily commuting budgets for all participants.</span>
-                  </div>
-                </li>
-                <li style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                  <CheckCircle size={18} color="var(--success)" style={{ marginTop: '0.15rem', flexShrink: 0 }} />
-                  <div>
-                    <strong style={{ display: 'block', fontSize: '0.95rem', color: 'var(--text-primary)' }}>Lowered Carbon Emissions</strong>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Carpooling directly decreases greenhouse gas emissions, fostering greener university communities.</span>
-                  </div>
-                </li>
-              </ul>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                By sharing rides, commuters collectively reduce carbon emissions, traffic congestion on busy corridors, and daily travel expenses.
+              </p>
             </div>
           </div>
           <div style={styles.detailsTextSide}>
