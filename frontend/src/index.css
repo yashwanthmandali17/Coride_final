@@ -611,3 +611,16 @@ select.form-input option, select option {
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+/* Mobile input zoom fix (enforces at least 16px font-size to prevent iOS/Android auto-zoom on focus) */
+@media (max-width: 768px) {
+  .form-input,
+  select.form-input,
+  textarea.form-input,
+  input.form-input,
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
